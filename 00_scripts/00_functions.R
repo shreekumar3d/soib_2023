@@ -1298,14 +1298,14 @@ filt_data_for_mig <- function(data, species_var, status_var) {
 ### run models ########################################
 
 # trends
-singlespeciesrun = function(data, species, specieslist, restrictedspecieslist, 
+singlespeciesrun_internal = function(data, species, specieslist, restrictedspecieslist,
                             singleyear = FALSE)
 {
   require(tidyverse)
   require(lme4)
   require(merTools)
   require(glue)
-  
+
   data1 = data
   
   # get information for the species of interest 
@@ -1347,7 +1347,9 @@ singlespeciesrun = function(data, species, specieslist, restrictedspecieslist,
     filter(COMMON.NAME == species) %>%
     distinct(gridg3, month) %>% 
     left_join(data1)
-  
+
+  dataset_size = nrow(data1)
+
   tm = data1 %>% distinct(timegroups)
   #rm(data, pos = ".GlobalEnv")
   
@@ -1463,10 +1465,28 @@ singlespeciesrun = function(data, species, specieslist, restrictedspecieslist,
   
   
 
-  tocomb = c(species, f1$freq, f1$se)
+  tocomb = c(dataset_size, species, f1$freq, f1$se)
   return(tocomb)
   # each species's tocomb becomes one column in final trends0 output object
   
+}
+
+singlespeciesrun = function(stats_dir, data, species, specieslist, restrictedspecieslist,
+                            singleyear = FALSE)
+{
+  library(peakRAM)
+
+  message(paste("Starting:",species))
+  ram <- peakRAM(retval <- singlespeciesrun_internal(data, species, specieslist, restrictedspecieslist, singleyear))
+  run_stats <- data.frame(data_rows = retval[1],
+                          time = ram$Elapsed_Time_sec,
+                          max_ram = ram$Peak_RAM_Used_MiB,
+                          pid = Sys.getpid())
+
+  save_file = paste0(stats_dir, "/",species,".RData")
+  save(run_stats, file=save_file)
+  message(paste("Generated : ", save_file))
+  return(retval[-1])
 }
 
 

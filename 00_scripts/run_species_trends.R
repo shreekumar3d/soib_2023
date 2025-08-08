@@ -87,6 +87,13 @@ if (to_run == TRUE) {
     dir.create(cur_metadata$TRENDS.PATHONLY, 
                recursive = T)
   }
+
+  trends_stats_dir <- paste0(cur_metadata$TRENDS.PATHONLY,"stats")
+  # creating new directory if it doesn't already exist
+  if (!dir.exists(trends_stats_dir)) {
+    dir.create(trends_stats_dir,
+               recursive = T)
+  }
   
   for (k in cur_assignment)
   {
@@ -95,7 +102,7 @@ if (to_run == TRUE) {
     write_path <- cur_metadata %>% 
       dplyr::summarise(TRENDS.PATH = glue("{TRENDS.PATHONLY}trends_{k}.csv")) %>% 
       as.character()
-    
+
     data_path = cur_metadata %>% 
       dplyr::summarise(SIMDATA.PATH = glue("{SIMDATA.PATHONLY}data{k}.RData")) %>% 
       as.character()
@@ -121,7 +128,7 @@ if (to_run == TRUE) {
     
     
     # start parallel
-    n.cores = parallel::detectCores()/2
+    n.cores = 6 # Ensure we don't run out of RAM
 
 
     # create the cluster
@@ -146,7 +153,8 @@ if (to_run == TRUE) {
     trends0 = foreach(i = listofspecies, 
                       # .verbose = TRUE,
                       .combine = 'cbind', .errorhandling = 'remove') %dopar%
-      singlespeciesrun(data = data, 
+      singlespeciesrun(stats_dir = trends_stats_dir,
+		       data = data,
                        species = i, 
                        specieslist = specieslist, 
                        restrictedspecieslist = restrictedspecieslist,

@@ -1,0 +1,17 @@
+
+The following command:
+
+$ ./perflog.py country_a1_p3s1.R
+
+resulted in this file country_a1_p3s1.R-37442.db
+
+Similarly named rss and cpu.svg files were generated using
+
+~/tools/py/bin/procpath plot -d country_a1_p3s1.R-37442.db -q cpu --relative-time -f cpu.svg
+~/tools/py/bin/procpath plot -d country_a1_p3s1.R-37442.db -q rss --relative-time -f rss.svg
+
+stats-37442.tar.bz2 has the contents of 01_analyses_full/trends/stats/ after
+running country_a1_p3s1.R. This has runtime stats of the job like
+peak RAM consumption per species, PID (to correlate with db), total time,
+and size of dataset (after the left join - see code)
+
