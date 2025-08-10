@@ -22,3 +22,7 @@ and size of dataset (after the left join - see code)
 # RAM optimizations (ramopt)
 
 DB file, cpu.svg and rss.svg and stats.tar.gz are available.
+
+# RAM optimization 2 (ramopt2)
+
+DB file, cpu.svg and rss.svg and stats.tar.gz are available.

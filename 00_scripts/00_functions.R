@@ -1307,6 +1307,7 @@ singlespeciesrun_internal = function(data, species_index, species, specieslist, 
   require(glue)
 
   data1 = data
+  rm(data)
   
   # get information for the species of interest 
   specieslist2 = specieslist %>% filter(COMMON.NAME == species)
@@ -1373,6 +1374,10 @@ singlespeciesrun_internal = function(data, species_index, species, specieslist, 
                              month %in% c(9,10,11) ~ "Aut")) %>% 
     mutate(month = as.factor(month))
 
+  # save some values referenced later so we can get rid of memory hog data1
+  gg1 <- data1$gridg1[1]
+  gg3 <- data1$gridg3[1]
+  rm(data1)
 
   # the model ---------------------------------------------------------------
   
@@ -1409,8 +1414,8 @@ singlespeciesrun_internal = function(data, species_index, species, specieslist, 
     mutate(no.sp = medianlla,
            # taking the first value but any random value will do because we do not
            # intend to predict random variation across grids
-           gridg1 = data1$gridg1[1], 
-           gridg3 = data1$gridg3[1])
+           gridg1 = gg1,
+           gridg3 = gg3)
   
   f2 <- ltemp %>% 
     {if (singleyear == FALSE) {

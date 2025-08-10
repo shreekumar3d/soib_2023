@@ -86,3 +86,14 @@ results (trends_1.csv) matches the reference values.
 I feel R is still wasting memory somewhere - what else accounts for the difference
 between peakMem and RSS reports from operating system ?
 
+### RAM Optimization 2
+
+singlespeciesrun() makes an expanded copy of data. This is not required when
+we run glm. So delete it. This has a modest, but measurable impact on RAM usage.
+
+Max Peak RAM consumption for any species is now slightly lower -  3226 MB.
+RSS values are mostly between 4-5 GB, with many spikes to 6 GB.
+
+The RSS doesn't reveal the entire picture. During runtime the memory consumption
+seems to be mostly aroud 4-5 GB per process. At this point I could technically
+squeeze 12 processes safely on my desktop (tests are still running at 6 procs)
