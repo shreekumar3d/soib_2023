@@ -97,3 +97,44 @@ RSS values are mostly between 4-5 GB, with many spikes to 6 GB.
 The RSS doesn't reveal the entire picture. During runtime the memory consumption
 seems to be mostly aroud 4-5 GB per process. At this point I could technically
 squeeze 12 processes safely on my desktop (tests are still running at 6 procs)
+
+### mcparallel for job launch
+
+Code was using doParallel with sockets (PSOCK). Turns out that this keeps
+copies of variables across worker threads. E.g. the "data" in the launch
+process gets copied and an entire copy is kept in the RAM for every worked
+thread. This is not the typical case with "copy on write", thus leading to
+a lot of RAM usage. This also adds to extra time for launching processes,
+etc, but that's minor compared to the RAM hit.
+
+The way out of this is to use mcparallel to "fork" launch child processes.
+This is applicable only for Linux. This avoids the data copy altogether,
+adhering to "copy on write" semantics.  This is thus a very good method.
+With this, the max peak RAM usage is down to 2919 MB - which is a significant
+improvement.
+
+The overall effect is seen in the RSS. A minimum of 44.6 GB RAM is free
+(out of 64) in my test machine, when running with 6 procs. The worst case
+RAM usage with 6 workers seems to be ~18 GB (excluding base OS overheads). 
+
+The output of perf-trends.py reveals that workers have a wide variety of
+RAM usage - 663 MB minimum to 2919 MB. Here are some interesting things:
+
+1. 260 species consume less than 1 GB of RAM, with most having a runtime
+   of much less than 30 seconds
+2. 341 species consume 1-2GB, with most having a runtime under 1 minute
+   Some of them even have a few second runtimes (surprise!)
+3. Remaining 136 consume 2-3 GB. Runtimes vary, but are mostly over
+   30 seconds, perhaps averaging around 80 seconds, with very few
+   stretching close to 2 minutes
+
+The program's output is cluttered with library loading messages, coming
+from the workers. It is probably useful to load them all in the main script
+before forking - may reduce some IO and some memory.
+
+For the run with 6 workers, it took 2961 seconds.
+
+Running many more threads hits at the limits of the system pretty quickly.
+I was able to run 24 threads - but that took 2757 seconds. Useful, but not
+a very big improvement - and certainly not representative of using 3x
+more threads.

@@ -47,7 +47,6 @@ if (to_run == TRUE) {
   require(lme4)
   require(VGAM)
   require(parallel)
-  require(foreach)
 
   # from https://stackoverflow.com/a/38371601/13000254
   # also see Linux-specific cases https://stackoverflow.com/q/37750937/13000254
@@ -140,42 +139,50 @@ if (to_run == TRUE) {
     # start parallel
     n.cores = 6 # Ensure we don't run out of RAM
 
+    print(paste0("Using cores:", n.cores))
 
-    # create the cluster
-    if (sys_windows == TRUE) {
-
-      my.cluster = parallel::makeCluster(
-        n.cores, 
-        type = "PSOCK"
-      )
-      # register it to be used by %dopar%
-      doParallel::registerDoParallel(cl = my.cluster)
-
-    } else {
-      doMC::registerDoMC(n.cores)
-    }
+    next_species <- 1
+    species_todo = length(listofspecies)
+    species_threads <- n.cores # cores
+    species_threads_active <- 0
+    species_done <- 0
+    trends0 <- NULL
     
-    # # check if it is registered (optional)
-    # foreach::getDoParRegistered()
-    # # how many workers are available? (optional)
-    # foreach::getDoParWorkers()
-    
-    trends0 = foreach(i = listofspecies, 
-                      # .verbose = TRUE,
-                      .combine = 'cbind', .errorhandling = 'remove') %dopar% {
-      species_index <- which(species_names$COMMON.NAME==i)
-      singlespeciesrun(stats_dir = trends_stats_dir,
+    repeat {
+      # start as many threads as we have (remaining) capacity for
+      while((next_species<=species_todo) && (species_threads_active < species_threads)) {
+	this_species = listofspecies[next_species]
+	species_index <- which(species_names$COMMON.NAME==this_species)
+	mcparallel(singlespeciesrun(stats_dir = trends_stats_dir,
 		       data = data,
 		       species_index = species_index,
-                       species = i, 
+                       species = this_species,
                        specieslist = specieslist, 
                        restrictedspecieslist = restrictedspecieslist,
-                       singleyear = singleyear)
+                       singleyear = singleyear))
+        next_species <- next_species + 1
+	species_threads_active <- species_threads_active + 1
+      }
+
+      print(paste("Threads active:", species_threads_active))
+
+      result_set <- mccollect(timeout = 10, wait=FALSE)
+      if (!is.null(result_set)) {
+        for (result in result_set) {
+          trends0 <- cbind(trends0, result)
+	  species_threads_active <- species_threads_active - 1
+	  species_done <- species_done + 1
+        }
+      }
+
+      print(paste("T=",proc.time()[3],
+		  "Next species:", next_species,
+		  "Threads:", species_threads_active,
+		  "Done:", species_done))
+      if((next_species>species_todo) && (species_threads_active == 0)) {
+        break
+      }
     }
-    if (sys_windows == TRUE) {
-      parallel::stopCluster(cl = my.cluster)
-    }
-    
 
     trends = data.frame(trends0) %>% 
       # converting first row of species names (always true) to column names

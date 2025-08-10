@@ -13,5 +13,6 @@ for filename in glob('01_analyses_full/trends/stats/*.RData'):
     results.append([data_rows, time, max_ram, pid, filename])
 
 results.sort(key=lambda x:x[2])
-pprint(results)
+for i in range(len(results)):
+    print(i+1, results[i])
 print("Number of species =",len(results))

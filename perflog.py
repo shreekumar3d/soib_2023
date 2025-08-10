@@ -14,6 +14,10 @@ import subprocess
 import sys
 from pprint import pprint
 import time
+import psutil
+
+free_ram_max = psutil.virtual_memory().available
+free_ram_min = free_ram_max
 
 proc = subprocess.Popen(['Rscript',sys.argv[1]])
 pid = proc.pid
@@ -30,7 +34,15 @@ logproc = subprocess.Popen([
     ])
 print(f'Tracing PID = {pid}')
 try:
-    proc.wait()
+    while True:
+        free_ram = psutil.virtual_memory().available
+        free_ram_max = max(free_ram_max, free_ram)
+        free_ram_min = min(free_ram_min, free_ram)
+        try:
+            proc.wait(1)
+            break # if we come here the proc is done
+        except subprocess.TimeoutExpired:
+            pass
 except:
     proc.kill()
 
@@ -41,3 +53,4 @@ logproc.kill()
 logproc.wait()
 print(f'Done tracing PID = {pid}')
 print(f"Results db stored in:", outfile)
+print(f"Free RAM max = {free_ram_max} min = {free_ram_min}")
