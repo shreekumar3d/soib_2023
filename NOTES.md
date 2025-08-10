@@ -4,6 +4,8 @@
 
 Due to the size of the datasets involved in SoIB, RAM is a large bottleneck.
 
+### Baseline
+
 The longest step is Part 3, Step 1, "Run species trends". Roughly takes around
 an hour for a "assignment" (out of 1000) for the whole country on my desktop.
 Config: AMD Ryzen 9 7950X (16 core, 32 thread). Plus 64 GB RAM.
@@ -23,7 +25,7 @@ Next, run
 
 $ export PATH=$PATH:~/tools/py/bin
 $ export OMP_NUM_THREADS=1
-$ ./perflog.py country_a1_p2s2.R
+$ ./perflog.py country_a1_p3s1.R
 
 This will create a .db file (name printed on stdout), which has OS level
 info on the performance of the parallel processes used to generate
