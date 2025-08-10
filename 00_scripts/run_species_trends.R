@@ -3,7 +3,9 @@ cur_metadata <- get_metadata(cur_mask)
 speclist_path <- cur_metadata$SPECLISTDATA.PATH
 databins_path <- cur_metadata$DATA.PATH # for databins
 
+
 # don't run if no species selected
+print(paste("Loading",speclist_path))
 load(speclist_path)
 to_run <- (1 %in% specieslist$ht) | (1 %in% specieslist$rt) |
   (1 %in% restrictedspecieslist$ht) | (1 %in% restrictedspecieslist$rt)
@@ -73,10 +75,11 @@ if (to_run == TRUE) {
 
   source('00_scripts/00_functions.R')
   
-  
+  print(paste("Loading:",speclist_path))
   load(speclist_path)
-  load(databins_path)
-  rm(data)
+  databins_path_metadata <- paste0(databins_path,'-metadata')
+  print(paste("Loading:",databins_path_metadata))
+  load(paste(databins_path_metadata))
   
   lsa = specieslist %>% filter(!is.na(ht) | !is.na(rt))
   listofspecies = c(lsa$COMMON.NAME, restrictedspecieslist$COMMON.NAME)
@@ -104,15 +107,22 @@ if (to_run == TRUE) {
       as.character()
 
     data_path = cur_metadata %>% 
-      dplyr::summarise(SIMDATA.PATH = glue("{SIMDATA.PATHONLY}data{k}.RData")) %>% 
+      dplyr::summarise(SIMDATA.PATH = glue("{SIMDATA.PATHONLY}data{k}.RData_opt")) %>%
       as.character()
     
     
     tictoc::tic(glue("Species trends for {cur_mask}: {k}/{max(cur_assignment)}"))
     
     # read data files
+    print(paste("Loading", data_path))
     load(data_path)
-    
+    load("00_data/species_names.RData")
+    load("00_data/timegroups.RData")
+
+    # map timegroups to strings
+    data_filt$timegroups <- timegroups_names$timegroups[data_filt$timegroups]
+    print(distinct(data_filt, timegroups))
+
     cols_temp <- if (singleyear == FALSE) {
       c("gridg1", "gridg2", "gridg3", "gridg4", "month", "timegroups")
     } else if (singleyear == TRUE) {
@@ -152,14 +162,16 @@ if (to_run == TRUE) {
     
     trends0 = foreach(i = listofspecies, 
                       # .verbose = TRUE,
-                      .combine = 'cbind', .errorhandling = 'remove') %dopar%
+                      .combine = 'cbind', .errorhandling = 'remove') %dopar% {
+      species_index <- which(species_names$COMMON.NAME==i)
       singlespeciesrun(stats_dir = trends_stats_dir,
 		       data = data,
+		       species_index = species_index,
                        species = i, 
                        specieslist = specieslist, 
                        restrictedspecieslist = restrictedspecieslist,
                        singleyear = singleyear)
-    
+    }
     if (sys_windows == TRUE) {
       parallel::stopCluster(cl = my.cluster)
     }

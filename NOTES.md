@@ -60,3 +60,29 @@ being consumed somewhere in R - which needs to be track down and accounted
 for.
 
 For reference, data files and graphs are kept in opt-explanations directory
+
+### RAM Optimization
+
+The data table has lots of numerical fields.  All these are converted to integers.
+
+Group ID and Observer IDs are carefully mapped to integer values.
+Species names are converted to an integer backed by a lookup table
+Timegroups are also converted to an integer backed by lookup table. This is
+converted back to a string after load.
+Observer count "X" is treated as 1
+
+With alll this, data table RAM usage is 50% of earlier. Loads ~10x faster.
+
+dataforanalyses had the data table, which was being deleted from memory just after
+load.  dataforanalyses is thus separated into data and metadata parts.  Only the
+metadata parts are loaded in run_species_trends
+
+Peak RAM consumption reported for any species by R is now 3495 MB.  RSS values in
+are in the 4-6 GB range.
+
+These optimizations haven't changed the result.  Verified by checking that the
+results (trends_1.csv) matches the reference values.
+
+I feel R is still wasting memory somewhere - what else accounts for the difference
+between peakMem and RSS reports from operating system ?
+

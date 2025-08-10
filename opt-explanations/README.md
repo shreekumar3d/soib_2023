@@ -1,5 +1,5 @@
 
-# Baseline
+# Baseline (baseline)
 
 Code changes : Added instrumentation on SoIB code
 
@@ -19,3 +19,6 @@ running country_a1_p3s1.R. This has runtime stats of the job like
 peak RAM consumption per species, PID (to correlate with db), total time,
 and size of dataset (after the left join - see code)
 
+# RAM optimizations (ramopt)
+
+DB file, cpu.svg and rss.svg and stats.tar.gz are available.

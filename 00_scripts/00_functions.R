@@ -1247,7 +1247,7 @@ expand_dt = function(data, species, singleyear = FALSE) {
                        "ALL.SPECIES.REPORTED","group.id","year","gridg0")) %>% 
       # deal with NAs (column is character)
       mutate(OBSERVATION.COUNT = case_when(is.na(OBSERVATION.COUNT) ~ 0,
-                                           OBSERVATION.COUNT != "0" ~ 1, 
+                                           OBSERVATION.COUNT != 0 ~ 1,
                                            TRUE ~ as.numeric(OBSERVATION.COUNT))) |> 
       as_tibble()
   
@@ -1298,7 +1298,7 @@ filt_data_for_mig <- function(data, species_var, status_var) {
 ### run models ########################################
 
 # trends
-singlespeciesrun_internal = function(data, species, specieslist, restrictedspecieslist,
+singlespeciesrun_internal = function(data, species_index, species, specieslist, restrictedspecieslist,
                             singleyear = FALSE)
 {
   require(tidyverse)
@@ -1344,7 +1344,7 @@ singlespeciesrun_internal = function(data, species, specieslist, restrictedspeci
 
   
   data1 = data1 %>%
-    filter(COMMON.NAME == species) %>%
+    filter(COMMON.NAME == species_index) %>%
     distinct(gridg3, month) %>% 
     left_join(data1)
 
@@ -1363,9 +1363,8 @@ singlespeciesrun_internal = function(data, species, specieslist, restrictedspeci
   
   medianlla = datay$medianlla
   
-  
   # expand dataframe to include absences as well
-  ed = expand_dt(data1, species) %>% 
+  ed = expand_dt(data1, species_index) %>%
     # converting months to seasons
     mutate(month = as.numeric(month)) %>% 
     mutate(month = case_when(month %in% c(12,1,2) ~ "Win",
@@ -1471,13 +1470,13 @@ singlespeciesrun_internal = function(data, species, specieslist, restrictedspeci
   
 }
 
-singlespeciesrun = function(stats_dir, data, species, specieslist, restrictedspecieslist,
+singlespeciesrun = function(stats_dir, data, species_index, species, specieslist, restrictedspecieslist,
                             singleyear = FALSE)
 {
   library(peakRAM)
 
-  message(paste("Starting:",species))
-  ram <- peakRAM(retval <- singlespeciesrun_internal(data, species, specieslist, restrictedspecieslist, singleyear))
+  message(paste("Starting:",species, species_index))
+  ram <- peakRAM(retval <- singlespeciesrun_internal(data, species_index, species, specieslist, restrictedspecieslist, singleyear))
   run_stats <- data.frame(data_rows = retval[1],
                           time = ram$Elapsed_Time_sec,
                           max_ram = ram$Peak_RAM_Used_MiB,
