@@ -1,9 +1,20 @@
+library(peakRAM)
+library(tidyverse)
+library(lme4)
+library(merTools)
+library(glue)
+library(dtplyr)
+library(data.table)
+library(lubridate)
+library(sf)
+library(reshape2)
+library(unmarked)
+library(tictoc)
+
 # get analyses metadata -------------------------------------------------
 
 get_metadata <- function(mask = NULL) {
 
-  require(tidyverse)
-  
   load("00_data/analyses_metadata.RData")
 
   if(is.null(mask)) {
@@ -67,8 +78,6 @@ simerrordiv = function(x1, x2, se1, se2)
 
 createrandomlocs = function(locs)
 {
-  require(tidyverse)
-  
   locs1 = locs %>% 
     group_by(LOCALITY.ID, month, timegroups) %>% sample_n(1)
   
@@ -156,9 +165,6 @@ get_iucn_proj_cols <- function() {
 readcleanrawdata = function(rawpath = "00_data/ebd_IN_relJun-2024.txt", 
                             sensitivepath = "00_data/ebd_sensitive_relJun-2024_IN.txt")
 {
-  require(lubridate)
-  require(tidyverse)
-  
   # select only necessary columns
   preimp = c("CATEGORY","COMMON.NAME","SCIENTIFIC.NAME","OBSERVATION.COUNT",
              "LOCALITY.ID","LOCALITY.TYPE","REVIEWED","APPROVED","STATE","COUNTY",
@@ -380,9 +386,6 @@ addmapvars = function(datapath = "00_data/rawdata.RData",
                       papath = "00_data/maps_pa_sf.RData",
                       maskspath = "00_data/habmasks_sf.RData")
 {
-  require(tidyverse)
-  require(sf)
-  
   load(datapath)
   
   # map details to add to eBird data
@@ -448,10 +451,6 @@ addmapvars = function(datapath = "00_data/rawdata.RData",
 ## to use in dataspeciesfilter()
 
 completelistcheck = function(data) {
-
-  require(tidyverse)
-  require(lubridate)
-
   data = data %>% 
     # create 2 columns from the "TIME.OBSERVATIONS.STARTED' column
     mutate(DATETIME = as_datetime(paste("2023-06-01", # any date, we just need the time
@@ -1134,8 +1133,6 @@ dataspeciesfilter = function(cur_mask = "none", singleyear = interannual_update)
 
 expandbyspecies = function(data, species)
 {
-  require(tidyverse)
-  
   data <- data %>% 
     mutate(across(contains("gridg"), ~ as.factor(.))) %>% 
     mutate(timegroups = as.factor(timegroups))
@@ -1169,11 +1166,6 @@ expandbyspecies = function(data, species)
 # optimising runtime
 # previous expandbyspecies() to be retired entirely in next annual update
 expand_dt = function(data, species, singleyear = FALSE) {
-
-  require(tidyverse)
-  require(dtplyr)
-  require(data.table)
-  
 
   setDT(data)
   
@@ -1301,10 +1293,6 @@ filt_data_for_mig <- function(data, species_var, status_var) {
 singlespeciesrun_internal = function(data, species_index, species, specieslist, restrictedspecieslist,
                             singleyear = FALSE)
 {
-  require(tidyverse)
-  require(lme4)
-  require(merTools)
-  require(glue)
 
   data1 = data
   rm(data)
@@ -1478,8 +1466,6 @@ singlespeciesrun_internal = function(data, species_index, species, specieslist, 
 singlespeciesrun = function(stats_dir, data, species_index, species, specieslist, restrictedspecieslist,
                             singleyear = FALSE)
 {
-  library(peakRAM)
-
   message(paste("Starting:",species, species_index))
   ram <- peakRAM(retval <- singlespeciesrun_internal(data, species_index, species, specieslist, restrictedspecieslist, singleyear))
   run_stats <- data.frame(data_rows = retval[1],
@@ -1497,13 +1483,6 @@ singlespeciesrun = function(stats_dir, data, species_index, species, specieslist
 # occupancy
 occupancyrun = function(data, i, speciesforocc, queen_neighbours)
 {
-  require(tidyverse)
-  require(reshape2)
-  require(data.table)
-  require(unmarked)
-  require(tictoc)
-  require(glue)  
-
   species = speciesforocc$eBird.English.Name.2023[i]
   status = speciesforocc$status[i]
 
@@ -1940,8 +1919,6 @@ get_latest_IUCN_status <- function(data, col_specname, col_iucn = NULL,
     stop("Arguments col_specname and col_iucn can only be character values.")
   }
   
-  require(tidyverse)
-  
   # col_iucn is the name we want for newly mutated IUCN column
   # (not necessarily name of IUCN column in mapping sheet)
   col_newnames <- if (is.null(col_iucn)) {
@@ -2038,8 +2015,6 @@ update_species_lists = function(species_list_data, scientific_also = FALSE) {
     stop("Currently running 'major' SoIB update, so specieslists needs to be rerun properly!")
   }
 
-  require(tidyverse)
-  
   if (!exists("fullmap")) {
     fullmap <- read.csv("00_data/SoIB_mapping_2023.csv")
   }

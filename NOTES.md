@@ -138,3 +138,8 @@ Running many more threads hits at the limits of the system pretty quickly.
 I was able to run 24 threads - but that took 2757 seconds. Useful, but not
 a very big improvement - and certainly not representative of using 3x
 more threads.
+
+The sweet spot seemed to be at 16 (same as number of cores). The job finished
+in 2472 seconds. Increasing parallelism to 18 jobs increased runtime to
+2600 secs. The CPUs were idle. This is likely due to memory bandwidth or
+other constraints

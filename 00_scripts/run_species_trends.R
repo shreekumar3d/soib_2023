@@ -1,3 +1,8 @@
+library(tidyverse)
+library(lme4)
+library(VGAM)
+library(parallel)
+
 # preparing data for specific mask (this is the only part that changes, but automatically)
 cur_metadata <- get_metadata(cur_mask)
 speclist_path <- cur_metadata$SPECLISTDATA.PATH
@@ -42,35 +47,6 @@ if (to_run == TRUE) {
   }
   
   ###
-  
-  require(tidyverse)
-  require(lme4)
-  require(VGAM)
-  require(parallel)
-
-  # from https://stackoverflow.com/a/38371601/13000254
-  # also see Linux-specific cases https://stackoverflow.com/q/37750937/13000254
-  if(Sys.info()["sysname"]=="Windows"){
-
-    sys_windows <- TRUE
-
-    if (!("doParallel" %in% installed.packages()[,"Package"])) {
-      install.packages("doParallel")
-    }
-
-    require(doParallel)
-
-  } else {
-
-    sys_windows <- FALSE
-
-    if (!("doMC" %in% installed.packages()[,"Package"])) {
-      install.packages("doMC")
-    }
-
-    require(doMC)
-
-  }
 
   source('00_scripts/00_functions.R')
   
@@ -120,7 +96,6 @@ if (to_run == TRUE) {
 
     # map timegroups to strings
     data_filt$timegroups <- timegroups_names$timegroups[data_filt$timegroups]
-    print(distinct(data_filt, timegroups))
 
     cols_temp <- if (singleyear == FALSE) {
       c("gridg1", "gridg2", "gridg3", "gridg4", "month", "timegroups")
