@@ -78,12 +78,24 @@ simerrordiv = function(x1, x2, se1, se2)
 
 createrandomlocs = function(locs)
 {
+  require(tidyverse)
   locs1 = locs %>% 
     group_by(LOCALITY.ID, month, timegroups) %>% sample_n(1)
   
   return(locs1$group.id)
 }
 
+createrandomlocs_grouped = function(grouped_locs)
+{
+  require(tidyverse)
+
+  # expect locs with "group_by" already done. Significantly speeds up
+  # iterations, by moving the group_by outside the loop
+  # Time reduced to 2 minutes from almost 3.5 minutes on Shree's computer
+  locs1 = grouped_locs %>% sample_n(1)
+
+  return(locs1$group.id)
+}
 
 # what are the latest migratory years under consideration? -----------------
 
