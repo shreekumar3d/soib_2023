@@ -29,9 +29,33 @@ group_values <- function(df) {
 }
 
 write_rgids <- function(write_path, rgids) {
+  # use default compression. good enough for small sets
   for(i in 1:1000) {
     randomgroupids <- rgids[,i]
     save(randomgroupids, file = paste0(write_path,"-",i))
+  }
+}
+
+write_rgids_xz <- function(write_path, rgids) {
+  # deploy xz compression for large files
+  cores <- parallel::detectCores()
+  running <- 0
+  next_idx <- 1
+  done_count <- 0
+  while((next_idx<=1000) || (done_count<1000)) {
+    started <- 0
+    while((running < cores) && (next_idx<=1000)) {
+      randomgroupids <- rgids[,next_idx]
+      mcparallel(save(randomgroupids, file = paste0(write_path,"-",next_idx), compress="xz"))
+      next_idx <- next_idx + 1
+      running <- running+1
+      started <- started+1
+    }
+    #print(paste("Running:", running, " Started:", started, "next_idx:",next_idx))
+    ret <- mccollect(timeout=1, wait=FALSE)
+    running <- running-length(ret)
+    done_count <- done_count + length(ret)
+    #print(paste("Done count:", done_count))
   }
 }
 
@@ -79,7 +103,14 @@ if (to_run == TRUE) {
   if(!dir.exists(target_dir)) {
     dir.create(target_dir, recursive = TRUE)
   }
-  write_rgids(target_path, rgids)
+
+  # Use xz compression for large datasets (1000 sets >= 100 MB)
+  # For small datasets (e.g. states) the benefits are minimal
+  if(nrow(rgids)>=50000) {
+    write_rgids_xz(target_path, rgids)
+  } else {
+    write_rgids(target_path, rgids)
+  }
   #mcparallel(write_rgids(write_path, rgids))
 
   # Cleanup
