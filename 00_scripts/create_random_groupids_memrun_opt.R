@@ -1,0 +1,93 @@
+library(parallel)
+
+# preparing data for specific mask (this is the only part that changes, but automatically)
+cur_metadata <- get_metadata(cur_mask)
+read_path <- cur_metadata$LOCS.PATH
+write_path <- cur_metadata$RAND.GROUP.IDS.PATH
+speclist_path <- cur_metadata$SPECLISTDATA.PATH
+
+# don't run if no species selected
+load(speclist_path)
+to_run <- (1 %in% specieslist$ht) | (1 %in% specieslist$rt) |
+  (1 %in% restrictedspecieslist$ht) | (1 %in% restrictedspecieslist$rt)
+
+###
+
+convert_group_id <- function(x) {
+  base <- ifelse(substr(x,1,1)=="S",0L,1000000000L) # G=>giga base
+  return(base + as.integer(substr(x,2,12)))
+}
+
+idx_col <- function(row) {
+  return(paste0(row["LOCALITY.ID"],as.character(row["month"]),row["timegroups"]))
+}
+
+group_values <- function(df) {
+  result <- df %>%
+    group_by(idx)
+  return(result)
+}
+
+write_rgids <- function(write_path, rgids) {
+  for(i in 1:1000) {
+    randomgroupids <- rgids[,i]
+    save(randomgroupids, file = paste0(write_path,"-",i))
+  }
+}
+
+generate_random_values <- function(df, size) {
+  result <- df %>%
+    slice_sample(n = size, replace = TRUE) %>%
+    ungroup()
+  return(result)
+}
+
+if (to_run == TRUE) {
+
+  # create the set of random locations (doesn't work inside a function)
+  require(tidyverse)
+
+  source('00_scripts/00_functions.R')
+
+  message(paste("Loading:", read_path))
+  locs = read.csv(read_path)
+  locs$keys = apply(locs, 1, idx_col)
+  indexes <- distinct(locs,keys)
+  key_index <- match(locs$keys, indexes$keys)
+  locs$idx <- key_index
+  locs$group.id <- convert_group_id(locs$group.id)
+
+  # remove unneeded columns
+  locs[c("keys", "month","timegroups","LOCALITY.ID")] <- list(NULL)
+  gc()
+
+  locs <- locs %>% group_by(idx)
+  message("Generating random samples...")
+  # Sampling 1000, one for each run, with replacement is much
+  # faster than doing one at a time
+  rtable <-locs %>%
+	   slice_sample(n = 1000, replace=TRUE) %>%
+	   ungroup()
+  # rearrange the 1000 to represent each run
+  rgids <- matrix(rtable$group.id, ncol=1000, byrow=TRUE)
+  rm(rtable)
+  rm(locs)
+  message(paste("Saving random ids at:",write_path))
+  # Write the 1000
+  target_path <- paste0('out/',write_path)
+  target_dir <- dirname(target_path)
+  if(!dir.exists(target_dir)) {
+    dir.create(target_dir, recursive = TRUE)
+  }
+  write_rgids(target_path, rgids)
+  #mcparallel(write_rgids(write_path, rgids))
+
+  # Cleanup
+  rm(rgids)
+  gc()
+
+} else {
+
+  print(glue("Skipping creation of random group IDs for {cur_mask}"))
+
+}
