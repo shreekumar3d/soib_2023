@@ -1,44 +1,58 @@
-# Dockerfile for container
+# Dockerfile for container. Build with podman
+# Reduced size by building over alpine
 #
 # Build with : podman build -t soib .
 #
+# podman save -o soib.tar localhost/soib:latest
+#
+# Image size:
+# - 450 MB without data (R+deps+base linux)
+# - 840 MB with data
 #
 
-# Base OS
-FROM ubuntu:24.04
+#FROM alpine:latest actually resolves to ?
+#Next step would be to tie down package versions
+FROM alpine:latest
 
-# Dependent Packages for all the R packages
-RUN apt update
-RUN apt install -y r-base
-RUN apt install -y libcurl4-openssl-dev
-RUN apt install -y libxml2-dev \
-        libcurl4-openssl-dev \
-        libfontconfig-dev \
-        pkgconf \
-        libharfbuzz-dev \
-        libfribidi-dev \
-        libpng-dev \
-        libtiff5-dev \
-        libjpeg-dev \
-        cmake \
-        libudunits2-dev \
-        libgdal-dev
+ARG R_VERSION
+ENV R_VERSION ${R_VERSION:-4.5.0}
+ENV LC_ALL en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV CRAN https://cran.r-project.org
+ENV R_DAILY_URL https://stat.ethz.ch/R/daily
 
-# R Packages our scripts need
-RUN Rscript -e 'install.packages("tidyverse")'
-RUN Rscript -e 'install.packages("glue")'
-RUN Rscript -e 'install.packages("tictoc")'
-RUN Rscript -e 'install.packages("dplyr")'
-RUN Rscript -e 'install.packages("peakRAM")'
-RUN Rscript -e 'install.packages("lubridate")'
-RUN Rscript -e 'install.packages("data.table")'
-RUN Rscript -e 'install.packages("sf")'
-RUN Rscript -e 'install.packages("reshape2")'
-RUN Rscript -e 'install.packages("unmarked")'
-RUN Rscript -e 'install.packages("merTools")'
-RUN Rscript -e 'install.packages("lme4")'
-RUN Rscript -e 'install.packages("arm")'
-RUN Rscript -e 'install.packages("VGAM")'
+# Dependent Packages for all the R packages, plus the R packages themselves as
+# one single layer
+# NOTE: gdal-dev is added later again as sf has some shared lib dependency on this
+# FIXME: Why is tidyverse coming from cloud-r project rather than cran project ?
+RUN apk update && \
+    apk add R cmake R-dev linux-headers g++ && \
+    apk add udunits udunits-dev gdal-dev proj proj-dev && \
+    apk add geos geos-dev && \
+    apk add tzdata && \
+    apk add libxml2-dev && \
+    apk add fontconfig-dev && \
+    apk add harfbuzz-dev && \
+    apk add fribidi-dev && \
+    apk add openssl-dev && \
+    apk add curl-dev && \
+    Rscript -e 'install.packages("tictoc",repos = "http://cran.us.r-project.org")' && \
+    Rscript -e 'install.packages("dplyr", repos = "http://cran.us.r-project.org")' && \
+    Rscript -e 'install.packages("peakRAM", repos = "http://cran.us.r-project.org")' && \
+    Rscript -e 'install.packages("lme4", repos = "http://cran.us.r-project.org")' && \
+    Rscript -e 'install.packages("arm", repos = "http://cran.us.r-project.org")' && \
+    Rscript -e 'install.packages("VGAM", repos = "http://cran.us.r-project.org")' && \
+    Rscript -e 'install.packages("merTools", repos = "http://cran.us.r-project.org")' && \
+    Rscript -e 'install.packages("unmarked", repos = "http://cran.us.r-project.org")' && \
+    Rscript -e 'install.packages("reshape2", repos = "http://cran.us.r-project.org")' && \
+    Rscript -e 'install.packages("sf", repos = "http://cran.us.r-project.org")' && \
+    Rscript -e 'install.packages("data.table", repos = "http://cran.us.r-project.org")' && \
+    Rscript -e 'install.packages("lubridate", repos = "http://cran.us.r-project.org")' && \
+    Rscript -e 'install.packages("glue", repos = "http://cran.us.r-project.org")' && \
+    Rscript -e 'install.packages("tidyverse", dependencies=TRUE, type="source", repos="https://cloud.r-project.org")' && \
+    apk del *-dev linux-headers g++ cmake && \
+    apk add gdal-dev && \
+    rm -rf /var/cache/apk/*
 
 # Static data that's in git
 COPY 00_data/analyses_metadata.RData /app/00_data/
