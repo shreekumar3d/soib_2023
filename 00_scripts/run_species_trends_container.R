@@ -93,6 +93,9 @@ if (to_run == TRUE) {
     load(data_path)
     load("00_data/species_names.RData")
     load("00_data/timegroups.RData")
+    run_stats_path <- paste0(dirname(databins_path),'/species_run_stats.RData')
+    message(paste("Loading", run_stats_path))
+    load(run_stats_path)
 
     # map timegroups to strings
     data_filt$timegroups <- timegroups_names$timegroups[data_filt$timegroups]
@@ -129,11 +132,23 @@ if (to_run == TRUE) {
     species_done <- 0
     trends0 <- NULL
     
+    # species_run_stats is ordered in descending order of runtime.
+    # longest running species typically consume max memory as well
+    # so peak memory consumption should happen in the beginning
+    # then this will taper.  Doing this also ensures that the job
+    # will fail in the beginning rather than later due to OOM
+    # scenarios.
+    #
+    # the table has species name, time to run, and peakRAM usage
+    # for that run.  Having all this as data makes it possible to
+    # "schedule" intelligently later
+
     repeat {
       # start as many threads as we have (remaining) capacity for
       started <- 0
       while((next_species<=species_todo) && (species_threads_active < species_threads)) {
-	this_species = listofspecies[next_species]
+	#this_species = listofspecies[next_species]
+	this_species <- species_run_stats$species_name[next_species]
 	species_index <- which(species_names$COMMON.NAME==this_species)
 	mcparallel(singlespeciesrun(stats_dir = trends_stats_dir,
 		       data = data,

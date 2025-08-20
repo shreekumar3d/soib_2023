@@ -70,6 +70,9 @@ COPY 01_analyses_full/dataforanalyses.RData-metadata /app/01_analyses_full/
 COPY 01_analyses_full/dataforanalyses.RData-data /app/01_analyses_data/
 COPY 01_analyses_full/dataforsim/data1.RData_opt /app/01_analyses_full/dataforsim/
 
+# Here we are packaging only the performance profile for this mask
+COPY 01_analyses_full/species_run_stats.RData /app/01_analyses_full/
+
 # NOTE: keeping data inside the container is a policy thing
 
 # Our R scripts
