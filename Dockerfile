@@ -80,5 +80,6 @@ COPY 00_scripts/00_functions.R /app/00_scripts/
 # Set working directory
 WORKDIR /app
 
+ENV OMP_NUM_THREADS=1
 # Command to run application
 ENTRYPOINT ["Rscript", "p3s1.R" ]
