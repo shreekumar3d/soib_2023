@@ -19,18 +19,37 @@ if (!dir.exists("output")) {
   quit()
 }
 
-worker_procs <- 6 # default to 6
-species_to_process <- 0 # all
+# Source config file that can define 'threads' and
+# 'species_to_process'. Anything else there is ignored
+source("output/config.R")
+
+library(parallel)
+
+# threads may be defined in config file
+if(!exists('threads')) {
+  worker_procs <- parallel::detectCores()/2
+  message("Using autodetected threads: ", worker_procs)
+} else {
+  message("Using configured threads: ", threads)
+  worker_procs <- as.integer(threads)
+}
+
+if(!exists('species_to_process')) {
+  message("Processing ALL species")
+  species_to_process <- c()
+} else {
+  message("Processing species from config:")
+  for(sp in species_to_process) {
+    message("  ", sp)
+  }
+}
 
 args = commandArgs(trailingOnly=TRUE)
 if(length(args)>=1) {
   worker_procs <- as.integer(args[1])
-  if(length(args)>=2) {
-    species_to_process <- as.integer(args[2])
-  }
+  message("Using command line specified threads: ", worker_procs)
 }
 
-message(paste("Using", worker_procs, " workers"))
 
 # necessary packages, functions/scripts, data
 library(tidyverse)

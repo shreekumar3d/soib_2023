@@ -1478,7 +1478,6 @@ singlespeciesrun_internal = function(data, species_index, species, specieslist, 
 singlespeciesrun = function(stats_dir, data, species_index, species, specieslist, restrictedspecieslist,
                             singleyear = FALSE)
 {
-  message(paste("Starting:",species, species_index))
   ram <- peakRAM(retval <- singlespeciesrun_internal(data, species_index, species, specieslist, restrictedspecieslist, singleyear))
   run_stats <- data.frame(data_rows = retval[1],
                           time = ram$Elapsed_Time_sec,

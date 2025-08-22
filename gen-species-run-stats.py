@@ -10,6 +10,7 @@ from glob import glob
 from pprint import pprint
 import pandas as pd
 import argparse
+from copy import deepcopy
 
 parser = argparse.ArgumentParser()
 parser.add_argument("mask_path", nargs='?', default="01_analyses_full")
@@ -38,7 +39,7 @@ print(f"Total time = {overall_time} avg = {overall_time/16}")
 
 # Simulate run
 cores = 16
-running = results[:cores] # start of all threads first
+running = deepcopy(results[:cores]) # start of all threads first
 cur_t = 0
 max_ram = 0
 next_species = cores
@@ -58,7 +59,7 @@ while len(running)>0:
     #print(cur_t)
     # If we have more, we can add, else we'll be in drain phase
     if next_species<len(results):
-        running.append(results[next_species])
+        running.append(deepcopy(results[next_species]))
         next_species += 1
 
 print(f'Time at end = {cur_t}')
