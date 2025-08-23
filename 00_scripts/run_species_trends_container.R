@@ -120,8 +120,6 @@ if (to_run == TRUE) {
 
     rm(cols_temp)
     
-    
-    
     # start parallel
     n.cores = worker_procs # From command line
 
@@ -151,15 +149,44 @@ if (to_run == TRUE) {
     # for that run.  Having all this as data makes it possible to
     # "schedule" intelligently later
 
+    free_ram <- get_free_ram() - ram_safety_margin*1000*1024
+
     # Minimum we can run is 1 species at a time. If we don't have memory
     # for that, better to exit now!
-    free_ram <- get_free_ram()
     min_ram_needed <- max(species_run_stats$peakRAM)*1000*1024
+
     if (min_ram_needed > free_ram) {
       message("Not enough RAM to fit even single species.")
       message(paste("Min reqd:", min_ram_needed, "Available:", free_ram))
       message("Increase container memory limits and try again.")
       quit()
+    }
+
+    if(ram_interleave) {
+      message("Running jobs with runtime length, combined with RAM interleave scheduling")
+      # bucket based on RAM. Mix of jobs with different RAM (3+2+1)=6 = 2x3 cores
+      # or 2 GB ram per core
+      bucket1 <- subset(species_run_stats, peakRAM < 1000)
+      bucket2 <- subset(species_run_stats, peakRAM >= 1000 & peakRAM < 2000)
+      bucket3 <- subset(species_run_stats, peakRAM >= 2000)
+
+      # clear
+      species_run_stats <- species_run_stats[0, ]
+      # combine buckets with interleaving
+      iters <- max(nrow(bucket1),nrow(bucket2),nrow(bucket3))
+      for (i in 1:iters) {
+        if(i<=nrow(bucket3)) {
+          species_run_stats[nrow(species_run_stats)+1,] <- bucket3[i,]
+        }
+        if(i<=nrow(bucket2)) {
+          species_run_stats[nrow(species_run_stats)+1,] <- bucket2[i,]
+        }
+        if(i<=nrow(bucket1)) {
+          species_run_stats[nrow(species_run_stats)+1,] <- bucket1[i,]
+        }
+      }
+    } else {
+      message("Running jobs with runtime length scheduling")
     }
 
     message("Free RAM at start ", as.integer(free_ram/1000000), " MB")
@@ -182,7 +209,11 @@ if (to_run == TRUE) {
 	  this_species <- species_run_stats$species_name[next_species]
 	  species_index <- which(species_names$COMMON.NAME==this_species)
 
-	  message("Starting: ", this_species, " peakRAM estimate: ", as.integer(min_ram_needed/1000000), " MB")
+	  message("Starting: ",
+                  this_species, ", estimated peakRAM: ",
+                  as.integer(min_ram_needed/1000000), " MB,",
+                  " runtime: ", species_run_stats$time[next_species], " seconds")
+
 	  # assume job will consume this much
 	  free_ram <- free_ram - min_ram_needed
 
@@ -202,6 +233,12 @@ if (to_run == TRUE) {
       if(started > 0) {
         message(paste("Threads started:", started))
       }
+
+      message("T=",proc.time()[3],
+		  " Estmated Peak Free RAM:", as.integer(free_ram/1000000), " MB",
+		  " Threads:", species_threads_active,
+		  " Done:", species_done,
+		  " Pending:", species_todo+1-next_species)
 
       done <- 0
       result_set <- mccollect(timeout = 10, wait=FALSE)
@@ -225,11 +262,6 @@ if (to_run == TRUE) {
         message(paste("Threads finished:", done))
       }
 
-      message("T=",proc.time()[3],
-		  " Estmated Peak Free RAM:", as.integer(free_ram/1000000), " MB",
-		  " Threads:", species_threads_active,
-		  " Done:", species_done,
-		  " Pending:", species_todo+1-next_species)
       if((next_species>species_todo) && (species_threads_active == 0)) {
         break
       }

@@ -27,11 +27,20 @@ library(parallel)
 
 # threads may be defined in config file
 if(!exists('threads')) {
-  worker_procs <- parallel::detectCores()/2
+  # we may get odd number of cores! e.g. in Mac
+  worker_procs <- as.integer(parallel::detectCores()/2)
   message("Using autodetected threads: ", worker_procs)
 } else {
   message("Using configured threads: ", threads)
   worker_procs <- as.integer(threads)
+}
+
+if(!exists('ram_safety_margin')) {
+  ram_safety_margin <- 0
+}
+
+if(!exists('ram_interleave')) {
+  ram_interleave <- TRUE
 }
 
 if(!exists('species_to_process')) {
