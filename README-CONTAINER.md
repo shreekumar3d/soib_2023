@@ -41,9 +41,9 @@ using your regular package manager.  E.g., on ubuntu, use
 
 ### Create the container
 
-Run this command
+Run this command, after changing to the unzipped directory
 
-    $ podman load -i x86_64/soib.tar
+    $ sh install-x86_64-container.sh
 
 You should see output such as:
 
@@ -98,9 +98,9 @@ Inside the wsl shell, execute
 
 ### Create the Container
 
-Run this command inside the wsl shell
+Run this command inside the wsl shell, inside the unzipped directory:
 
-    $ podman load -i x86_64/soib.tar
+    $ sh install-x86_64-container.sh
 
 ### Running the container
 
@@ -134,6 +134,41 @@ using:
 
     wsl --shutdown
 
+## Mac
+
+### Install Podman
+
+Install podman from podman.io for the Mac.  The exact steps you use may vary.
+
+After installing podman, you typically want to setup a Linux virtual machine
+that can then run the SoIB container.  You can do that by running this on
+the CLI:
+
+    $ podman machine init
+
+This will take a while to download things.  Then run:
+
+    $ podman machine start
+
+### Install the container
+
+Use the terminal, change to the directory where the ZIP package is extracted,
+and run:
+
+    $ sh install-arm64-container.sh
+
+### Memory Limits on Mac
+
+Mac machines have lower RAM, like laptops.  Also, like windows the default
+allocation to the podman linux virtual machine is half the RAM, which is
+low.  You typically want to bump this up to at-least 14 GB for a 4 core
+system. Set the number of CPUs to the number of performance cores on your
+Mac (e.g. 4 on M4)
+
+    $ podman machine stop
+    $ podman machine set --cpus 4 --memory 14000
+    $ podman machine start
+
 # Additional Usage Notes
 
 The output directory has a file config.R, using which you can configure the
@@ -143,6 +178,7 @@ number of threads, as well as which species to run trends calculation for.
 
 By default, the container will try to run multiple threads - as many as half
 the number of cores, subject to RAM limits.  This is a good default choice.
+
 But you can bump this number up or down by setting the "threads" variable
 in output/config.R . Bumping up the threads to match cores may make sense
 on computers with a lot of memory bandwidth, eg
@@ -153,6 +189,11 @@ Reducing the number of threads is a useful thing for testing or observing
 RAM and CPU consumption patterns.
 
     threads <- 1
+
+If you are on a Mac, then set the number of threads to the number of
+performance cores. E.g. on a Mac Mini M4
+
+    threads <- 4
 
 ## Species List
 
