@@ -36,21 +36,31 @@ RUN apk update && \
     apk add fribidi-dev && \
     apk add openssl-dev && \
     apk add curl-dev && \
-    Rscript -e 'install.packages("tictoc",repos = "http://cran.us.r-project.org")' && \
-    Rscript -e 'install.packages("dplyr", repos = "http://cran.us.r-project.org")' && \
-    Rscript -e 'install.packages("peakRAM", repos = "http://cran.us.r-project.org")' && \
-    Rscript -e 'install.packages("lme4", repos = "http://cran.us.r-project.org")' && \
-    Rscript -e 'install.packages("arm", repos = "http://cran.us.r-project.org")' && \
-    Rscript -e 'install.packages("VGAM", repos = "http://cran.us.r-project.org")' && \
-    Rscript -e 'install.packages("merTools", repos = "http://cran.us.r-project.org")' && \
-    Rscript -e 'install.packages("unmarked", repos = "http://cran.us.r-project.org")' && \
-    Rscript -e 'install.packages("reshape2", repos = "http://cran.us.r-project.org")' && \
-    Rscript -e 'install.packages("sf", repos = "http://cran.us.r-project.org")' && \
-    Rscript -e 'install.packages("data.table", repos = "http://cran.us.r-project.org")' && \
-    Rscript -e 'install.packages("lubridate", repos = "http://cran.us.r-project.org")' && \
-    Rscript -e 'install.packages("glue", repos = "http://cran.us.r-project.org")' && \
-    Rscript -e 'install.packages("tidyverse", dependencies=TRUE, type="source", repos="https://cloud.r-project.org")' && \
-    apk del *-dev linux-headers g++ cmake && \
+    apk add libsecret-dev
+
+# Install the awesome "pak" first!
+ADD install_pak.R /
+RUN Rscript install_pak.R
+
+ADD install_packages_or_die.R /
+#RUN Rscript install_packages_or_die.R lubdridate
+# Somehow lubridate works better if first ?
+RUN Rscript -e 'install.packages("lubridate", repos = "http://cloud.r-project.org")'
+RUN Rscript install_packages_or_die.R tictoc
+RUN Rscript install_packages_or_die.R dplyr
+RUN Rscript install_packages_or_die.R peakRAM
+RUN Rscript install_packages_or_die.R lme4
+RUN Rscript install_packages_or_die.R arm
+RUN Rscript install_packages_or_die.R VGAM
+RUN Rscript install_packages_or_die.R merTools
+RUN Rscript install_packages_or_die.R unmarked
+RUN Rscript install_packages_or_die.R reshape2
+RUN Rscript install_packages_or_die.R sf
+RUN Rscript install_packages_or_die.R data.table
+RUN Rscript install_packages_or_die.R glue
+RUN Rscript install_packages_or_die.R tidyverse
+
+RUN apk del *-dev linux-headers g++ cmake && \
     apk add gdal-dev && \
     rm -rf /var/cache/apk/*
 
