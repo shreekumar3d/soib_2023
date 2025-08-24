@@ -64,6 +64,9 @@ RUN apk del *-dev linux-headers g++ cmake && \
     apk add gdal-dev && \
     rm -rf /var/cache/apk/*
 
+# R build files
+RUN rm -rf /tmp/*
+
 # Static data that's in git
 COPY 00_data/analyses_metadata.RData /app/00_data/
 COPY 01_analyses_full/specieslists.RData /app/01_analyses_full/
@@ -77,7 +80,7 @@ COPY 00_data/current_soib_migyears.RData /app/00_data/
 COPY 01_analyses_full/dataforanalyses.RData-metadata /app/01_analyses_full/
 # We don't need -data right now. If we don't ship _opt, we need to
 # ship/create random ids
-COPY 01_analyses_full/dataforanalyses.RData-data /app/01_analyses_data/
+#COPY 01_analyses_full/dataforanalyses.RData-data /app/01_analyses_data/
 COPY 01_analyses_full/dataforsim/data1.RData_opt /app/01_analyses_full/dataforsim/
 
 # Here we are packaging only the performance profile for this mask
