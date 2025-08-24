@@ -12,7 +12,8 @@ get_free_ram <- function() {
 #               total        used        free      shared  buff/cache   available
 #Mem:        65572748     1544972    62672624        2976     1995520    64027776
 #Swap:        8388604           0     8388604
-  ram <- system("free | awk '/Mem:/ {print $4}'", intern = TRUE)
+#"available" is how much more RAM we can be use without swapping
+  ram <- system("free | awk '/Mem:/ {print $7}'", intern = TRUE)
   ram <- as.integer(ram)*1024
   return(ram)
 }
