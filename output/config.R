@@ -12,7 +12,8 @@
 # means "process all species"
 species_to_process <- c(
 #  "Coppersmith Barbet",
-#  "Oriental Magpie-Robin"
+#  "Oriental Magpie-Robin",
+#  "Rufous-throated Fulvetta" # Short runtime
 )
 
 # Runs RAM hungry jobs in interleaved fashion. This is
