@@ -315,8 +315,22 @@ if (to_run == TRUE) {
       }} %>% 
       # make sure freq and se are numerical
       mutate(across(c("freq", "se"), ~ as.numeric(.)))
-    
-    
+
+    # reorder species to reflect the list order prior to RAM optimizations
+    # this makes it easy to compare trends_N.csv files with older ones side
+    # by side
+    trends_reorder <- trends[0, ]
+    for (sp_name in listofspecies) {
+      entries <- subset(trends, COMMON.NAME==sp_name)
+      rows <- nrow(entries)
+      if(rows>1) {
+        for (idx in 1:rows) {
+          trends_reorder[nrow(trends_reorder)+1,] <- entries[idx,]
+        }
+      }
+    }
+    trends <- trends_reorder
+
     # if full run, overwrite the CSV
     # else append single year results to all previous year results
     if (singleyear == FALSE) {
