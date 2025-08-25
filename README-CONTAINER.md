@@ -25,10 +25,17 @@ smaller for testing.
 The container may be used under Linux, or under Windows - using WSL(Windows
 Subsystem for Linux).
 
+The containers provided here are tested on:
+- Linux on 16C/32T AMD Ryzen 9 7950X desktop with 64 GB RAM
+- Mac Mini M4 (base model with 16 GB RAM)
+- Lenovo Legion laptop with 16 core AMD processor, 16 GB memory running
+  Linux and Windows
+
 # Getting Started and Basic Usage
 
 Extract the ZIP package.  It includes a directory "soib-container". Change to
-that directory on your terminal.  Then follow the OS specific steps.
+that directory on your terminal.  Then follow the OS specific steps. Every
+command mentioned in this document needs to be run from inside this directory.
 
 ## Linux
 
@@ -70,11 +77,12 @@ The container is now installed.
 
 ### Running the container
 
-Simply start run_container.sh as below
+Simply start run_container.sh from the shell as below
 
     $ sh run_container.sh
 
-You'll see familiar output of execution of the script.
+You'll see familiar output of execution of the script. You may press Control-C
+to terminate the execution of the container at any time.
 
 ### Output
 
@@ -89,6 +97,29 @@ Installation and usage of WSL is out of the scope of this document.
 With WSL installed, the usage steps are exactly the same as Linux.  In Linux,
 you would use the terminal to execute the commands. In WSL, you first run "wsl"
 to start the WSL shell.
+
+### Memory Limits on WSL
+
+By default, Windows allocates about 50% of your system's memory (RAM) to WSL.
+SoIB needs a lot of memory to run. Without changing the amount of memory
+allocated to WSL, you may find that the container takes a long time to finish,
+as it won't start many parallel jobs to ensure the RAM limit is not hit.
+
+You can setup a specific memory limit by editing the file .wslconfig in your
+user profile directory. e.g. to setup a limit of 12 GB, the contents of the
+file may look like below:
+
+    [wsl2]
+    memory=12GB
+
+Note that WSL is like an entire OS running together with your windows OS, which
+itself needs a good amount of memory to work satisfactorily. So do not try to
+allocated the entire the entire memory available to WSL.
+
+For the change to take effect, you will need to shutdown any running WSL instance,
+using:
+
+    wsl --shutdown
 
 ### Install Podman
 
@@ -108,31 +139,13 @@ Simply start run_container.sh inside the wsl shell as below
 
     $ sh run_container.sh
 
-You'll see familiar output of execution of the script.
+You'll see familiar output of execution of the script. You may press Control-C
+to terminate the execution of the container at any time.
 
 ### Output
 
 After the container finishes running successfully, the species trends output will be
 in output/trends_1.csv
-
-### Memory Limits on WSL
-
-By default, Windows allocates about 50% of your system's memory (RAM) to WSL.
-SoIB needs a lot of memory to run. Without changing the amount of memory
-allocated to WSL, you may find that the container takes a long time to finish,
-as it won't start many parallel jobs to ensure the RAM limit is not hit.
-
-You can setup a specific memory limit by editing the file .wslconfig in your
-user profile directory. e.g. to setup a limit of 16 GB, the contents of the
-file may look like below:
-
-    [wsl2]
-    memory=16GB
-
-For the change to take effect, you will need to shutdown any running WSL instance,
-using:
-
-    wsl --shutdown
 
 ## Mac
 
@@ -168,6 +181,20 @@ Mac (e.g. 4 on M4)
     $ podman machine stop
     $ podman machine set --cpus 4 --memory 14000
     $ podman machine start
+
+### Running the container
+
+Simply start run_container.sh inside the command shell as below
+
+    $ sh run_container.sh
+
+You'll see familiar output of execution of the script. You may press Control-C
+to terminate the execution of the container at any time.
+
+### Output
+
+After the container finishes running successfully, the species trends output will be
+in output/trends_1.csv
 
 # Additional Usage Notes
 
