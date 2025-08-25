@@ -20,16 +20,25 @@ The container can potentially package the entire dataset later (all region
 masks, random IDs, etc). That is not done right now to keep the file size
 smaller for testing.
 
-# Operating Systems
+# Operating Systems and Hardware
 
-The container may be used under Linux, or under Windows - using WSL(Windows
-Subsystem for Linux).
+The container may be used under Linux, Windows - using WSL(Windows
+Subsystem for Linux), or Mac
 
 The containers provided here are tested on:
+
 - Linux on 16C/32T AMD Ryzen 9 7950X desktop with 64 GB RAM
 - Mac Mini M4 (base model with 16 GB RAM)
 - Lenovo Legion laptop with 16 core AMD processor, 16 GB memory running
   Linux and Windows
+
+On Windows and Mac, the Linux VM(virtual machine) that runs the container
+is allocated a separate memory block.  SoIB species trends computations are memory
+intensive. These OSes typically allocate half the system RAM to the VM, which
+may be less. With less RAM, less threads will be allocated for processing, slowing
+it down. A minimum of 12 GB is desirable to be allocate to the VM to run
+4-6 threads simultaneously. Follow the appropriate steps under the specific operating
+systems, before you start a run.
 
 # Getting Started and Basic Usage
 
@@ -226,7 +235,10 @@ performance cores. E.g. on a Mac Mini M4
 
 By default, trends calculations are done for all species.  You may choose
 a subset of species by naming them "species_to_process" variable inside
-output/config.R . E.g., to run for just two species:
+output/config.R . This is useful to quickly check something for a subset
+of species without completing an entire run.
+
+E.g., to run for just two species:
 
     species_to_process <- c(
       "Coppersmith Barbet",
