@@ -2,7 +2,7 @@
 
 SoIB container is a concept/package that allows you to run SoIB on any platform
 without going through the process of installing any dependencies, and with a
-minimum of privileges.  You'll typically get this package as as a ZIP
+minimum of OS privileges.  You'll typically get this package as as a ZIP
 file : soib-container.zip
 
 This file includes everything required to try out a subset of the SoIB computation.
@@ -11,8 +11,8 @@ run across multiple machines. This container helps run a single iteration
 (out of the 1000) for the full country, for testing and validation of the
 container concept.
 
-The container includes some of the SoIB code, an R installation with all
-dependent packages, and some required data - including sensitive species.
+The container includes some of modified (RAM optimized) SoIB code, an R installation
+with all dependent packages, and some required data - including sensitive species.
 So please do not pass on this container to people who are not supposed
 to have access to the data.
 
@@ -27,18 +27,21 @@ Subsystem for Linux), or Mac
 
 The containers provided here are tested on:
 
-- Linux on 16C/32T AMD Ryzen 9 7950X desktop with 64 GB RAM
-- Mac Mini M4 (base model with 16 GB RAM)
-- Lenovo Legion laptop with 16 core AMD processor, 16 GB memory running
-  Linux and Windows
+- Linux on 16C/32T AMD Ryzen 9 7950X desktop with 64 GB RAM. Time to finish
+  computation: 2580 seconds (43 minutes)
+- Mac Mini M4 (base model with 16 GB RAM). Time to finish: 3860 seconds (1 hr
+  5 minutes)
+- Lenovo Legion laptop with 16 core AMD processor (Ryzen 7 5800H), 16 GB memory,
+  (5 year old laptop). Running Linux and Windows. Time to finish: 7256 seconds
+  (2 hrs)
 
 On Windows and Mac, the Linux VM(virtual machine) that runs the container
 is allocated a separate memory block.  SoIB species trends computations are memory
 intensive. These OSes typically allocate half the system RAM to the VM, which
 may be less. With less RAM, less threads will be allocated for processing, slowing
-it down. A minimum of 12 GB is desirable to be allocate to the VM to run
-4-6 threads simultaneously. Follow the appropriate steps under the specific operating
-systems, before you start a run.
+it down. A minimum of 12 GB (14 on M4 mini) is desirable to be allocated to the VM to run
+4-6 threads simultaneously. For best performance, please follow the appropriate steps
+given for specific operating systems, before you start a run.
 
 # Getting Started and Basic Usage
 
@@ -86,12 +89,26 @@ The container is now installed.
 
 ### Running the container
 
-Simply start run_container.sh from the shell as below
+Start run_container.sh from the shell as below
 
     $ sh run_container.sh
 
 You'll see familiar output of execution of the script. You may press Control-C
 to terminate the execution of the container at any time.
+
+The messages also help you track how much of the compute job is running, finished,
+and pending. Some of these numbers (peak RAM, runtime) are indicative, not exact.
+They are measured on a reference machine, not the one where you might actually
+run the container. These are used as heurestics to schedule execution order of
+species in a RAM aware manner. You may see messages like the following:
+
+    T=3344.302 Estmated Peak Free RAM:116 MB Threads:5 Done:105 Pending:627
+    Generated :  output/stats/Black-winged Kite.RData
+    Threads finished: 1
+    Starting: Dunlin, estimated peakRAM: 738 MB, runtime: 10.7130000000001 seconds
+    Won't start 3 threads due to insufficient RAM (needed for 1 more: 2280 MB free:2218 MB)
+    Threads started: 1
+    T=3346.034 Estmated Peak Free RAM:2218 MB Threads:5 Done:106 Pending:626
 
 ### Output
 
@@ -144,7 +161,7 @@ Run this command inside the wsl shell, inside the unzipped directory:
 
 ### Running the container
 
-Simply start run_container.sh inside the wsl shell as below
+Start run_container.sh inside the wsl shell as below
 
     $ sh run_container.sh
 
@@ -193,7 +210,7 @@ Mac (e.g. 4 on M4)
 
 ### Running the container
 
-Simply start run_container.sh inside the command shell as below
+Start run_container.sh inside the command shell as below
 
     $ sh run_container.sh
 
