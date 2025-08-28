@@ -8,6 +8,17 @@
 # 1. Ensure sanity of setup (compare trends1.csv with reference)
 # 2. Benchmark execution performance
 #
+suppressPackageStartupMessages({
+   library(tidyverse)
+   library(Matrix)
+   library(VGAM)
+   library(unmarked)
+   library(reshape2)
+   library(data.table)
+   library(arm)
+   library(MASS)
+   library(tictoc)
+})
 
 # We pass results back to host using the "output" directory.
 # The container doesn't have it. It has to be bound by the user
