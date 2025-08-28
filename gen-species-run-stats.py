@@ -13,13 +13,14 @@ import argparse
 from copy import deepcopy
 
 parser = argparse.ArgumentParser()
-parser.add_argument("mask_path", nargs='?', default="01_analyses_full")
+parser.add_argument("stats_path", nargs='?', default='output/localhost/none/stats')
+parser.add_argument("out_path", nargs='?', default='01_analyses_full')
 
 args = parser.parse_args()
-print(f'Using mask: {args.mask_path}')
+print(f'Using masked path: {args.stats_path}')
 results = []
 overall_time = 0
-for filename in glob(f'{args.mask_path}/trends/stats/*.RData'):
+for filename in glob(f'{args.stats_path}/*.RData'):
     rdata = pyreadr.read_r(filename)
     run_stats = rdata['run_stats'].to_numpy()
     data_rows = int(run_stats[0,0])
@@ -82,4 +83,6 @@ df_data = {
 df = pd.DataFrame(df_data)
 # This is hacky - assumes we have only one. Ideally we have one
 # "profile" per mask, if the files are large enough
-pyreadr.write_rdata(f"{args.mask_path}/species_run_stats.RData", df, df_name="species_run_stats")
+outfile = f"{args.out_path}/species_run_stats.RData"
+pyreadr.write_rdata(outfile, df, df_name="species_run_stats")
+print("Generated:", outfile)
