@@ -30,9 +30,11 @@ if (!dir.exists("output")) {
   quit()
 }
 
+hostname <- paste0(Sys.info()["nodename"],"")
+
 # Source config file that can define 'threads' and
 # 'species_to_process'. Anything else there is ignored
-source("output/config.R")
+source(paste0("config/",hostname,"/config.R"))
 
 library(parallel)
 
@@ -78,7 +80,7 @@ library(tictoc)
 
 source("00_scripts/00_functions.R")
 
-load("00_data/analyses_metadata.RData")
+load("data/00_data/analyses_metadata.RData")
 
 # full country runs -------------------------------------------------------
 

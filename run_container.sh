@@ -1,4 +1,8 @@
-# podman source directory mapping needs an absolute
-# path. So we wrap this up to ensure the user doesn't
-# get confused
-podman run -v `pwd`/output:/app/output -it soib "$@"
+# Script wrapper to reduce need for documentation and avoid user errors:
+# - podman mounts need absolute paths
+# - we need to pass hostname to the container
+#
+# Paths are set to file paths in source tree
+#
+MYDIR=`pwd`
+podman run -v $MYDIR/config:/app/config -v $MYDIR/output:/app/output -v $MYDIR:/app/data --hostname localhost -it soib "$@"

@@ -3,10 +3,12 @@ library(lme4)
 library(VGAM)
 library(parallel)
 
+hostname <- paste0(Sys.info()["nodename"],"")
+
 # preparing data for specific mask (this is the only part that changes, but automatically)
 cur_metadata <- get_metadata(cur_mask)
-speclist_path <- cur_metadata$SPECLISTDATA.PATH
-databins_path <- cur_metadata$DATA.PATH # for databins
+speclist_path <- paste0("data/", cur_metadata$SPECLISTDATA.PATH)
+databins_path <- paste0("data/", cur_metadata$DATA.PATH) # for databins
 
 get_free_ram <- function() {
 #               total        used        free      shared  buff/cache   available
@@ -59,8 +61,6 @@ if (to_run == TRUE) {
 
   source('00_scripts/00_functions.R')
   
-  message(paste("Loading:",speclist_path))
-  load(speclist_path)
   databins_path_metadata <- paste0(databins_path,'-metadata')
   message(paste("Loading:",databins_path_metadata))
   load(paste(databins_path_metadata))
@@ -75,7 +75,7 @@ if (to_run == TRUE) {
                recursive = T)
   }
 
-  trends_stats_dir <- "output/stats"
+  trends_stats_dir <- paste0("output/",hostname,"/", cur_mask, "/stats")
   # creating new directory if it doesn't already exist
   if (!dir.exists(trends_stats_dir)) {
     dir.create(trends_stats_dir,
@@ -87,11 +87,11 @@ if (to_run == TRUE) {
     
     # file names for individual files
     write_path <- cur_metadata %>% 
-      dplyr::summarise(TRENDS.PATH = glue("output/trends_{k}.csv")) %>% 
+      dplyr::summarise(TRENDS.PATH = glue("output/{hostname}/{cur_mask}/trends_{k}.csv")) %>% 
       as.character()
 
     data_path = cur_metadata %>% 
-      dplyr::summarise(SIMDATA.PATH = glue("{SIMDATA.PATHONLY}data{k}.RData_opt")) %>%
+      dplyr::summarise(SIMDATA.PATH = glue("data/{SIMDATA.PATHONLY}data{k}.RData_opt")) %>%
       as.character()
     
     
@@ -100,8 +100,8 @@ if (to_run == TRUE) {
     # read data files
     message(paste("Loading", data_path))
     load(data_path)
-    load("00_data/species_names.RData")
-    load("00_data/timegroups.RData")
+    load("data/00_data/species_names.RData")
+    load("data/00_data/timegroups.RData")
     run_stats_path <- paste0(dirname(databins_path),'/species_run_stats.RData')
     message(paste("Loading", run_stats_path))
     load(run_stats_path)

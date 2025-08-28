@@ -67,26 +67,8 @@ RUN apk del *-dev linux-headers g++ cmake && \
 # R build files
 RUN rm -rf /tmp/*
 
-# Static data that's in git
-COPY 00_data/analyses_metadata.RData /app/00_data/
-COPY 01_analyses_full/specieslists.RData /app/01_analyses_full/
-COPY 00_data/species_names.RData /app/00_data/
-COPY 00_data/timegroups.RData /app/00_data/
-COPY 00_data/current_soib_migyears.RData /app/00_data/
-
-# Data files. Whatever we package here is inside the container, so
-# makes it easier to manage.  Keep an eye on the size so it doesn't
-# blow up
-COPY 01_analyses_full/dataforanalyses.RData-metadata /app/01_analyses_full/
-# We don't need -data right now. If we don't ship _opt, we need to
-# ship/create random ids
-#COPY 01_analyses_full/dataforanalyses.RData-data /app/01_analyses_data/
-COPY 01_analyses_full/dataforsim/data1.RData_opt /app/01_analyses_full/dataforsim/
-
-# Here we are packaging only the performance profile for this mask
-COPY 01_analyses_full/species_run_stats.RData /app/01_analyses_full/
-
-# NOTE: keeping data inside the container is a policy thing
+# NOTE: keeping data inside the container is a policy thing,
+# so now moved out
 
 # Our R scripts
 COPY p3s1.R /app/p3s1.R

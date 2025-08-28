@@ -15,7 +15,7 @@ library(tictoc)
 
 get_metadata <- function(mask = NULL) {
 
-  load("00_data/analyses_metadata.RData")
+  load("data/00_data/analyses_metadata.RData")
 
   if(is.null(mask)) {
     return(analyses_metadata)
@@ -113,7 +113,7 @@ soib_year_info <- function(what = "latest_year") {
 
 
   # load latest year data
-  load("00_data/current_soib_migyears.RData")
+  load("data/00_data/current_soib_migyears.RData")
 
 
   # latest year
