@@ -1347,7 +1347,8 @@ singlespeciesrun_internal = function(data, species_index, species, specieslist, 
   data1 = data1 %>%
     filter(COMMON.NAME == species_index) %>%
     distinct(gridg3, month) %>% 
-    left_join(data1)
+    left_join(data1) %>%
+    suppressMessages()
 
   dataset_size = nrow(data1)
 
@@ -1462,7 +1463,8 @@ singlespeciesrun_internal = function(data, species_index, species, specieslist, 
       mutate(timegroupsf = factor(timegroupsf, 
                                   levels = soib_year_info("timegroup_lab"))) %>% 
       complete(timegroupsf) %>% 
-      arrange(timegroupsf)
+      arrange(timegroupsf) %>%
+      suppressMessages()
     } else if (singleyear == TRUE) {
       reframe(., freq = mean(freqt), se = mean(set))
     }}
@@ -1486,7 +1488,6 @@ singlespeciesrun = function(stats_dir, data, species_index, species, specieslist
 
   save_file = paste0(stats_dir, "/",species,".RData")
   save(run_stats, file=save_file)
-  message(paste("Generated : ", save_file))
   return(retval[-1])
 }
 
