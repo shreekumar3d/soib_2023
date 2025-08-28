@@ -79,7 +79,6 @@ library(tictoc)
 source("00_scripts/00_functions.R")
 
 load("00_data/analyses_metadata.RData")
-save(analyses_metadata, file = "output/t.RData")
 
 # full country runs -------------------------------------------------------
 
