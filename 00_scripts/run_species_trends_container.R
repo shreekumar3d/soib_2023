@@ -228,7 +228,9 @@ if (to_run == TRUE) {
                        restrictedspecieslist = restrictedspecieslist,
                        singleyear = singleyear))
 	  # keep track of which PID is which species
-	  launched[[as.character(proc$pid)]] <- launch_species
+	  launched[[as.character(proc$pid)]] <- c(launch_species,
+					          proc.time()[3],
+						  species_run_stats$time[launch_species_idx])
 
 	  message("Started: ",
                   launch_species, ", estimated peakRAM: ",
@@ -259,15 +261,19 @@ if (to_run == TRUE) {
         for (idx in 1:length(finished_pids)) {
 	  result <- result_set[[finished_pids[idx]]]
 	  pid_str <- as.character(finished_pids[idx])
-	  this_species <- launched[[pid_str]]
+	  this_species <- launched[[pid_str]][1]
+	  time_taken <- proc.time()[3] - as.numeric(launched[[pid_str]][2])
+	  time_expected <- as.numeric(launched[[pid_str]][3])
           launched[[pid_str]] <- NULL # remove
 	  if(length(result)==0) {
-	      message("Failed: ", this_species)
+	      message("Failed: ", this_species, " Time taken:", time_taken, " secs")
 	      # Move this failed to pending
 	      species_pending_list <- append(species_pending_list, this_species)
 	      species_failed <- species_failed + 1
 	  } else {
-	      message("Finished: ", this_species)
+	      percent <- (time_taken/time_expected)*100.0
+	      percent_str <- format(round(percent, 2), nsmall = 2)
+	      message("Finished: ", this_species, " Time taken:", time_taken, " secs (", percent_str, " %)")
               trends0 <- cbind(trends0, result)
 	      species_done <- species_done + 1
 	  }
