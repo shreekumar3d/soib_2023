@@ -7,9 +7,13 @@
 # On a Mac, set this to the number of performance cores
 #threads <- 4
 
+# Mask
+# Defaults to whole country, i.e. "none"
+cur_mask <- "none"
+
 # my_assignment : Which subset to process
 # if undefined, defaults to 1
-#my_assignment <- 1
+#my_assignment <- 1:1
 
 # You may choose to process a subset of species by
 # defining those names here. An empty/absent list

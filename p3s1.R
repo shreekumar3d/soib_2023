@@ -100,7 +100,9 @@ if(!exists('my_assignment')) {
 # - "trends/trendsX.csv" files
 
 message('Running Part 3, Step 1')
-cur_mask <- "none" # analysis for full country (not masks)
-tic(glue("Species trends for full country (sims {min(my_assignment)}:{max(my_assignment)})"))
+if(!exists('cur_mask')) {
+  cur_mask <- "none" # analysis for full country (not masks)
+}
+tic(glue("Species trends for mask {cur_mask} (sims {min(my_assignment)}:{max(my_assignment)})"))
 source("00_scripts/run_species_trends_container.R")
 toc()
