@@ -28,11 +28,11 @@ group_values <- function(df) {
   return(result)
 }
 
-write_rgids <- function(write_path, rgids) {
+write_rgids <- function(write_dir, rgids) {
   # use default compression. good enough for small sets
   for(i in 1:1000) {
     randomgroupids <- rgids[,i]
-    save(randomgroupids, file = paste0(write_path,"-",i))
+    save(randomgroupids, file = paste0(write_dir,"/rgids-",i,".RData"))
   }
 }
 
@@ -96,21 +96,22 @@ if (to_run == TRUE) {
   rgids <- matrix(rtable$group.id, ncol=1000, byrow=TRUE)
   rm(rtable)
   rm(locs)
-  message(paste("Saving random ids at:",write_path))
   # Write the 1000
-  target_path <- paste0('out/',write_path)
+  target_path <- write_path
   target_dir <- dirname(target_path)
+  message(paste("Saving random ids at:",target_dir))
   if(!dir.exists(target_dir)) {
     dir.create(target_dir, recursive = TRUE)
   }
 
   # Use xz compression for large datasets (1000 sets >= 100 MB)
   # For small datasets (e.g. states) the benefits are minimal
-  if(nrow(rgids)>=50000) {
-    write_rgids_xz(target_path, rgids)
-  } else {
-    write_rgids(target_path, rgids)
-  }
+#  if(nrow(rgids)>=50000) {
+#    write_rgids_xz(target_path, rgids)
+#  } else {
+#    write_rgids(target_path, rgids)
+#  }
+  write_rgids(target_dir, rgids)
   #mcparallel(write_rgids(write_path, rgids))
 
   # Cleanup
