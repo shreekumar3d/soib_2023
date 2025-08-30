@@ -21,7 +21,7 @@ get_free_ram <- function() {
 }
 
 # don't run if no species selected
-message(paste("Loading",speclist_path))
+message(paste("Loading:",speclist_path))
 load(speclist_path)
 to_run <- (1 %in% specieslist$ht) | (1 %in% specieslist$rt) |
   (1 %in% restrictedspecieslist$ht) | (1 %in% restrictedspecieslist$rt)
@@ -64,7 +64,12 @@ if (to_run == TRUE) {
   databins_path_metadata <- paste0(databins_path,'-metadata')
   message(paste("Loading:",databins_path_metadata))
   load(paste(databins_path_metadata))
-  
+
+  databins_path_data <- paste0(databins_path,'-data_opt')
+  tic(paste("Loading:",databins_path_data))
+  load(paste(databins_path_data)) # will create "data"
+  toc()
+
   lsa = specieslist %>% filter(!is.na(ht) | !is.na(rt))
   listofspecies = c(lsa$COMMON.NAME, restrictedspecieslist$COMMON.NAME)
   speclen = length(listofspecies)
@@ -80,11 +85,14 @@ if (to_run == TRUE) {
   load("data/00_data/timegroups.RData")
 
   run_stats_path <- paste0(dirname(databins_path),'/species_run_stats.RData')
-  message(paste("Loading", run_stats_path))
+  message(paste("Loading:", run_stats_path))
   load(run_stats_path)
 
   for (k in cur_assignment)
   {
+    message("========================================")
+    message(paste("Starting assignment:", k))
+    message("========================================")
     trends_species_dir <- paste0("output/", cur_mask, "/", hostname,"/", k, "/species")
     trends_stats_dir <- paste0(trends_species_dir,"/stats")
     # creating new directory if it doesn't already exist
@@ -105,8 +113,12 @@ if (to_run == TRUE) {
     tictoc::tic(glue("Species trends for {cur_mask}: {k}/{max(cur_assignment)}"))
     
     # read data files for this step
-    message(paste("Loading", data_path))
-    load(data_path)
+    rgid_path <- paste0(dirname(databins_path_data),"/rgids-", k, ".RData")
+    message(paste("Loading", rgid_path))
+    load(rgid_path) # loads this_assignment
+
+    # Subset data to match assignment
+    data_filt <- data[data$group.id %in% this_assignment$group.id, ]
 
     # map timegroups to strings
     data_filt$timegroups <- timegroups_names$timegroups[data_filt$timegroups]
@@ -134,7 +146,7 @@ if (to_run == TRUE) {
       run_stats <- run_stats %>%
 	                   filter(species_name %in% species_to_process)
     }
-    message(paste0("Processing Species:", species_todo))
+    message(paste("Processing", species_todo, "species..."))
 
     species_threads <- min(n.cores, species_todo) # if very few species then can't engage all cores
     species_threads_active <- 0
