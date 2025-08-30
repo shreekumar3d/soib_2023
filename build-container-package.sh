@@ -15,16 +15,20 @@ cp 01_analyses_full/specieslists.RData soib-container/data/01_analyses_full
 cp 00_data/species_names.RData soib-container/data/00_data
 cp 00_data/timegroups.RData soib-container/data/00_data
 cp 00_data/current_soib_migyears.RData soib-container/data/00_data
-#cp 00_data/01_analyses_full/dataforanalyses.RData-data soib-container/data/00_data/01_analyses_full
+
+# The full data, metadata
+cp 01_analyses_full/dataforanalyses.RData-data_opt soib-container/data/01_analyses_full
 cp 01_analyses_full/dataforanalyses.RData-metadata soib-container/data/01_analyses_full
-cp 01_analyses_full/dataforsim/data1.RData_opt soib-container/data/01_analyses_full/dataforsim
+# All random groupids
+cp 01_analyses_full/rgids-*.RData soib-container/data/01_analyses_full/
+# Stats to guide scheduling
 cp 01_analyses_full/species_run_stats.RData soib-container/data/01_analyses_full
 
 cp install-x86_64-container.sh soib-container/
 cp install-arm64-container.sh soib-container/
 
-podman build --layers --squash-all -t soib .
-# container in appropriate arch dir
-podman save -o soib-container/`uname -m`/soib.tar localhost/soib:latest
+# copy container from appropriate arch dir
+#
+cp `uname -m`/soib.tar soib-container/`uname -m`
 rm soib-container.zip
 zip -r soib-container.zip soib-container
