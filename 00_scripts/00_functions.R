@@ -1477,7 +1477,7 @@ singlespeciesrun_internal = function(data, species_index, species, specieslist, 
   
 }
 
-singlespeciesrun = function(stats_dir, data, species_index, species, specieslist, restrictedspecieslist,
+singlespeciesrun = function(stats_dir, species_dir, data, species_index, species, specieslist, restrictedspecieslist,
                             singleyear = FALSE)
 {
   ram <- peakRAM(retval <- singlespeciesrun_internal(data, species_index, species, specieslist, restrictedspecieslist, singleyear))
@@ -1488,7 +1488,10 @@ singlespeciesrun = function(stats_dir, data, species_index, species, specieslist
 
   save_file = paste0(stats_dir, "/",species,".RData")
   save(run_stats, file=save_file)
-  return(retval[-1])
+  species_result = paste0(species_dir, "/",species,".RData")
+  result <- retval[-1]
+  save(result, file=species_result)
+  return(result)
 }
 
 

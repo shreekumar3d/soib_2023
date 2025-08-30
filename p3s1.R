@@ -84,7 +84,9 @@ load("data/00_data/analyses_metadata.RData")
 
 # full country runs -------------------------------------------------------
 
-my_assignment <- 1:1
+if(!exists('my_assignment')) {
+  my_assignment <- 1:1
+}
 
 # PART 3 (run) ------------------------------------------------------------------
 

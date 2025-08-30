@@ -75,36 +75,38 @@ if (to_run == TRUE) {
                recursive = T)
   }
 
-  trends_stats_dir <- paste0("output/",hostname,"/", cur_mask, "/stats")
-  # creating new directory if it doesn't already exist
-  if (!dir.exists(trends_stats_dir)) {
-    dir.create(trends_stats_dir,
-               recursive = T)
-  }
-  
+  # Load common data
+  load("data/00_data/species_names.RData")
+  load("data/00_data/timegroups.RData")
+
+  run_stats_path <- paste0(dirname(databins_path),'/species_run_stats.RData')
+  message(paste("Loading", run_stats_path))
+  load(run_stats_path)
+
   for (k in cur_assignment)
   {
+    trends_species_dir <- paste0("output/", cur_mask, "/", hostname,"/", k, "/species")
+    trends_stats_dir <- paste0(trends_species_dir,"/stats")
+    # creating new directory if it doesn't already exist
+    if (!dir.exists(trends_stats_dir)) {
+      dir.create(trends_stats_dir,
+                 recursive = T)
+    }
     
     # file names for individual files
     write_path <- cur_metadata %>% 
-      dplyr::summarise(TRENDS.PATH = glue("output/{hostname}/{cur_mask}/trends_{k}.csv")) %>% 
+      dplyr::summarise(TRENDS.PATH = glue("output/{cur_mask}/{hostname}/{k}/trends_{k}.csv")) %>%
       as.character()
 
     data_path = cur_metadata %>% 
       dplyr::summarise(SIMDATA.PATH = glue("data/{SIMDATA.PATHONLY}data{k}.RData_opt")) %>%
       as.character()
     
-    
     tictoc::tic(glue("Species trends for {cur_mask}: {k}/{max(cur_assignment)}"))
     
-    # read data files
+    # read data files for this step
     message(paste("Loading", data_path))
     load(data_path)
-    load("data/00_data/species_names.RData")
-    load("data/00_data/timegroups.RData")
-    run_stats_path <- paste0(dirname(databins_path),'/species_run_stats.RData')
-    message(paste("Loading", run_stats_path))
-    load(run_stats_path)
 
     # map timegroups to strings
     data_filt$timegroups <- timegroups_names$timegroups[data_filt$timegroups]
@@ -124,11 +126,12 @@ if (to_run == TRUE) {
     # start parallel
     n.cores = worker_procs # From command line
 
+    run_stats <- species_run_stats
     species_todo <- length(species_to_process)
     if (species_todo==0) {
       species_todo <- length(listofspecies)
     } else {
-      species_run_stats <- species_run_stats %>%
+      run_stats <- run_stats %>%
 	                   filter(species_name %in% species_to_process)
     }
     message(paste0("Processing Species:", species_todo))
@@ -139,7 +142,7 @@ if (to_run == TRUE) {
     species_failed <- 0
     trends0 <- NULL
     
-    # species_run_stats is ordered in descending order of runtime.
+    # run_stats is ordered in descending order of runtime.
     # longest running species typically consume max memory as well
     # so peak memory consumption should happen in the beginning
     # then this will taper.  Doing this also ensures that the job
@@ -154,7 +157,7 @@ if (to_run == TRUE) {
 
     # Minimum we can run is 1 species at a time. If we don't have memory
     # for that, better to exit now!
-    min_ram_needed <- max(species_run_stats$peakRAM)*1000*1024
+    min_ram_needed <- max(run_stats$peakRAM)*1000*1024
 
     if (min_ram_needed > free_ram) {
       message("Not enough RAM to fit even single species.")
@@ -168,23 +171,23 @@ if (to_run == TRUE) {
       message("Running jobs with runtime length, combined with RAM interleave scheduling")
       # bucket based on RAM. Mix of jobs with different RAM (3+2+1)=6 = 2x3 cores
       # or 2 GB ram per core
-      bucket1 <- subset(species_run_stats, peakRAM < 1000)
-      bucket2 <- subset(species_run_stats, peakRAM >= 1000 & peakRAM < 2000)
-      bucket3 <- subset(species_run_stats, peakRAM >= 2000)
+      bucket1 <- subset(run_stats, peakRAM < 1000)
+      bucket2 <- subset(run_stats, peakRAM >= 1000 & peakRAM < 2000)
+      bucket3 <- subset(run_stats, peakRAM >= 2000)
 
       # clear
-      species_run_stats <- species_run_stats[0, ]
+      run_stats <- run_stats[0, ]
       # combine buckets with interleaving
       iters <- max(nrow(bucket1),nrow(bucket2),nrow(bucket3))
       for (i in 1:iters) {
         if(i<=nrow(bucket3)) {
-          species_run_stats[nrow(species_run_stats)+1,] <- bucket3[i,]
+          run_stats[nrow(run_stats)+1,] <- bucket3[i,]
         }
         if(i<=nrow(bucket2)) {
-          species_run_stats[nrow(species_run_stats)+1,] <- bucket2[i,]
+          run_stats[nrow(run_stats)+1,] <- bucket2[i,]
         }
         if(i<=nrow(bucket1)) {
-          species_run_stats[nrow(species_run_stats)+1,] <- bucket1[i,]
+          run_stats[nrow(run_stats)+1,] <- bucket1[i,]
         }
       }
     } else {
@@ -194,7 +197,7 @@ if (to_run == TRUE) {
     try_thread_start <- TRUE
 
     launched <- list()
-    species_pending_list <- as.vector(species_run_stats$species_name)
+    species_pending_list <- as.vector(run_stats$species_name)
 
     # Keep going as long as we have species to run, or threads active
     while((length(species_pending_list)>0) || (species_threads_active>0)) {
@@ -205,8 +208,8 @@ if (to_run == TRUE) {
 	  launch_species <- species_pending_list[1]
           species_pending_list <- species_pending_list[-1] # Remove it for now
 
-	  launch_species_idx <- which(species_run_stats$species_name == launch_species)
-	  min_ram_needed <- species_run_stats$peakRAM[launch_species_idx]*1000*1024
+	  launch_species_idx <- which(run_stats$species_name == launch_species)
+	  min_ram_needed <- run_stats$peakRAM[launch_species_idx]*1000*1024
           if(min_ram_needed > free_ram) {
 	      message("Won't start ", species_threads-species_threads_active,
 	              " threads due to insufficient RAM (needed for 1 more: ",
@@ -220,22 +223,26 @@ if (to_run == TRUE) {
 	  # assume job will consume this much
 	  free_ram <- free_ram - min_ram_needed
 
-	  proc <- mcparallel(singlespeciesrun(stats_dir = trends_stats_dir,
+	  proc <- mcparallel(
+		    singlespeciesrun(
+		       stats_dir = trends_stats_dir,
+		       species_dir = trends_species_dir,
 		       data = data,
 		       species_index = species_index,
                        species = launch_species,
                        specieslist = specieslist, 
                        restrictedspecieslist = restrictedspecieslist,
-                       singleyear = singleyear))
+                       singleyear = singleyear)
+	          )
 	  # keep track of which PID is which species
 	  launched[[as.character(proc$pid)]] <- c(launch_species,
 					          proc.time()[3],
-						  species_run_stats$time[launch_species_idx])
+						  run_stats$time[launch_species_idx])
 
 	  message("Started: ",
                   launch_species, ", estimated peakRAM: ",
                   as.integer(min_ram_needed/1000000), " MB,",
-                  " runtime: ", species_run_stats$time[launch_species_idx], " seconds")
+                  " runtime: ", run_stats$time[launch_species_idx], " seconds")
 
 	  species_threads_active <- species_threads_active + 1
           started <- started + 1
@@ -278,8 +285,8 @@ if (to_run == TRUE) {
 	      species_done <- species_done + 1
 	  }
 
-	  done_index <- which(species_run_stats$species_name==this_species)
-	  done_mem <- species_run_stats$peakRAM[done_index]*1000*1024
+	  done_index <- which(run_stats$species_name==this_species)
+	  done_mem <- run_stats$peakRAM[done_index]*1000*1024
 	  free_ram <- free_ram + done_mem
 	  species_threads_active <- species_threads_active - 1
           done <- done + 1

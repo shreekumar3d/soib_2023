@@ -7,6 +7,10 @@
 # On a Mac, set this to the number of performance cores
 #threads <- 4
 
+# my_assignment : Which subset to process
+# if undefined, defaults to 1
+#my_assignment <- 1
+
 # You may choose to process a subset of species by
 # defining those names here. An empty/absent list
 # means "process all species"
