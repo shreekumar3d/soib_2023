@@ -17,7 +17,7 @@ interannual_update = TRUE
 
 # PART 0 (paths) ----------------------------------------------------------
 
-source("00_scripts/01_create_metadata.R")
+#source("00_scripts/01_create_metadata.R")
 
 # PART 2 (subsample) ------------------------------------------------------------------
 
