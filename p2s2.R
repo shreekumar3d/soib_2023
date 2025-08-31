@@ -65,10 +65,6 @@ toc()
 
 # states
 not_my_states <- c(
-  c("Telangana", "Chhattisgarh", "Jammu and Kashmir", "Assam",  "Andhra Pradesh", "Puducherry", 
-    "Madhya Pradesh"),
-  c("Gujarat", "Uttarakhand", "West Bengal", "Maharashtra", "Karnataka", "Kerala", "Tamil Nadu", 
-    "Meghalaya", "Ladakh")
 )
 
 tic("Generated subsampled data for all states") # 4 hours for 21 states
