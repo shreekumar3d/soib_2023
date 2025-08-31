@@ -182,6 +182,13 @@ run:
     sys     56m27.913s
 
 
+First time runs don't dump info about script runtime estimates,
+as it is not available. To fix it, generate the stats using:
+
+$ ~/tools/py/bin/python3 gen-species-run-stats.py output/none/`hostname`/1/species/stats/ 01_analyses_full/
+
+Note this has to be done for all regions separately.
+
 Note different masks take different time to run:
 
 e.g. Woodland
