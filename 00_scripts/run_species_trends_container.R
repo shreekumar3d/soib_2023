@@ -81,8 +81,13 @@ if (to_run == TRUE) {
   }
 
   # Load common data
-  load("data/00_data/species_names.RData")
-  load("data/00_data/timegroups.RData")
+  basedir <- dirname(databins_path)
+  species_names_path <- paste0(basedir, "/species_names.RData")
+  timegroups_path <- paste0(basedir, "/timegroups.RData")
+  message("Loading: ", species_names_path)
+  load(species_names_path)
+  message("Loading: ", timegroups_path)
+  load(timegroups_path)
 
   run_stats_path <- paste0(dirname(databins_path),'/species_run_stats.RData')
   have_run_stats <- FALSE
