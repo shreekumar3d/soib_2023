@@ -24,6 +24,15 @@ species_to_process <- c(
 #  "Rufous-throated Fulvetta" # Short runtime
 )
 
+# Trends computation results in a trends_N.csv file
+# Force trends computation. Defaults to TRUE for
+# developer use.
+# If this is set to FALSE, then we'll check if the
+# result file exists, and skip computation. Useful
+# option for running on cloud and recovering from
+# errors in extreme cases
+#force_trends_computation <- FALSE
+
 # Runs RAM hungry jobs in interleaved fashion. This is
 # the default.  Helps reduce peak memory pressure, making
 # it easier to use on lower memory devices like laptops

@@ -32,9 +32,17 @@ if (!dir.exists("output")) {
 
 hostname <- paste0(Sys.info()["nodename"],"")
 
+config_filename <- 'config.R'
+args = commandArgs(trailingOnly=TRUE)
+if(length(args)>=1) {
+  config_filename <- args[1]
+  message("Using config file: ", config_filename)
+}
+
+
 # Source config file that can define 'threads' and
 # 'species_to_process'. Anything else there is ignored
-source(paste0("config/",hostname,"/config.R"))
+source(paste0("config/",hostname,"/", config_filename))
 
 library(parallel)
 
@@ -66,12 +74,11 @@ if(!exists('species_to_process')) {
   }
 }
 
-args = commandArgs(trailingOnly=TRUE)
-if(length(args)>=1) {
-  worker_procs <- as.integer(args[1])
-  message("Using command line specified threads: ", worker_procs)
+# By default, run trends calculations even if the
+# result file exists. Good for devs
+if(!exists('force_trends_computation')) {
+  force_trends_computation <- TRUE
 }
-
 
 # necessary packages, functions/scripts, data
 library(tidyverse)

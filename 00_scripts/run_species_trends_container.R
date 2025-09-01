@@ -117,6 +117,14 @@ if (to_run == TRUE) {
       dplyr::summarise(TRENDS.PATH = glue("output/{cur_mask}/{hostname}/{k}/trends_{k}.csv")) %>%
       as.character()
 
+    if(file.exists(write_path)) {
+      if(!force_trends_computation) {
+        message("Result ", write_path, " exists. Skipping computation.")
+        next # skip this iteration
+      } else {
+        message("Result ", write_path, " exists. Computing again.")
+      }
+    }
     data_path = cur_metadata %>% 
       dplyr::summarise(SIMDATA.PATH = glue("data/{SIMDATA.PATHONLY}data{k}.RData_opt")) %>%
       as.character()
