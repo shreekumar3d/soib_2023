@@ -1202,7 +1202,7 @@ expand_dt = function(data, species, singleyear = FALSE) {
   if (singleyear == FALSE) {
 
     checklistinfo <- unique(data[, 
-                                 .(gridg1, gridg3, ALL.SPECIES.REPORTED, OBSERVER.ID,
+                                 .(gridg1, gridg3, ALL.SPECIES.REPORTED,
                                    group.id, month, year, no.sp, timegroups)
     ])[
       # filter
@@ -1212,7 +1212,7 @@ expand_dt = function(data, species, singleyear = FALSE) {
   } else if (singleyear == TRUE) {
 
     checklistinfo <- unique(data[, 
-                                 .(gridg2, gridg3, ALL.SPECIES.REPORTED, OBSERVER.ID,
+                                 .(gridg2, gridg3, ALL.SPECIES.REPORTED,
                                    group.id, month, year, no.sp)
     ])[
       # filter
@@ -1234,11 +1234,11 @@ expand_dt = function(data, species, singleyear = FALSE) {
   
   join_by_temp <- if (singleyear == FALSE) {
     c("group.id", "gridg1", "gridg3",
-      "ALL.SPECIES.REPORTED", "OBSERVER.ID", "month", "year", 
+      "ALL.SPECIES.REPORTED", "month", "year",
       "no.sp", "timegroups", "COMMON.NAME")
   } else if (singleyear == TRUE) {
     c("group.id", "gridg1", "gridg3",
-      "ALL.SPECIES.REPORTED", "OBSERVER.ID", "month", "year", 
+      "ALL.SPECIES.REPORTED", "month", "year",
       "no.sp","COMMON.NAME")
   }
 
@@ -1247,7 +1247,7 @@ expand_dt = function(data, species, singleyear = FALSE) {
       mutate(COMMON.NAME = species) %>% 
       left_join(data |> lazy_dt(immutable = FALSE),
                 by = join_by_temp) %>%
-      dplyr::select(-c("COMMON.NAME","OBSERVER.ID",
+      dplyr::select(-c("COMMON.NAME",
                        "ALL.SPECIES.REPORTED","group.id","year","gridg0")) %>% 
       # deal with NAs (column is character)
       mutate(OBSERVATION.COUNT = case_when(is.na(OBSERVATION.COUNT) ~ 0,

@@ -99,6 +99,11 @@ if (to_run == TRUE) {
     message("No run stats, can't optimize")
   }
 
+  # delete coulumns gridg2 and gridg4
+  data$gridg2 <- NULL
+  data$gridg4 <- NULL
+  data$OBSERVER.ID <- NULL
+
   for (k in cur_assignment)
   {
     message("========================================")
@@ -135,11 +140,6 @@ if (to_run == TRUE) {
     rgid_path <- paste0(dirname(databins_path_data),"/rgids-", k, ".RData")
     message(paste("Loading", rgid_path))
     load(rgid_path) # loads randomgroupids
-
-    # delete coulumns gridg2 and gridg4
-    data$gridg2 <- NULL
-    data$gridg4 <- NULL
-    gc()
 
     # Subset data to match assignment
     data_filt <- data[data$group.id %in% randomgroupids, ]
