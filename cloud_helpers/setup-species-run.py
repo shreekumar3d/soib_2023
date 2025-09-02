@@ -71,9 +71,9 @@ force_trends_computation <- FALSE
 
     # Add trends
     for idx in range(assignment_start,assignment_end+1):
-        # Paths are relative to the output directory, which is where
+        # Paths are relative to the mask directory, which is where
         # we'll store the done list
-        trends_list.append(f'{mask}/{node}/{idx}/trends_{idx}.csv')
+        trends_list.append(f'{node}/{idx}/trends_{idx}.csv')
 
 script_dir = Path("shared/scripts")
 script_dir.mkdir(parents=True, exist_ok=True)
@@ -88,8 +88,10 @@ hf.close()
 os.chmod(headnode_script, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
 shutil.copy('scripts/compute-node-setup.sh', 'shared/scripts/compute-node-setup.sh')
+shutil.copy('scripts/head-node-setup.sh', 'shared/scripts/head-node-setup.sh')
 shutil.copy('scripts/node-run-jobs.sh', 'shared/scripts/node-run-jobs.sh')
 shutil.copy('scripts/launch-job.py', 'shared/scripts/launch-job.py')
+shutil.copy('scripts/job-status.py', 'shared/scripts/job-status.py')
 
 # Add generic data files
 data_dir = Path("shared/data")
@@ -127,7 +129,7 @@ shutil.copy('../00_data/analyses_metadata.RData', 'shared/data/00_data/analyses_
 shutil.copy('../00_data/current_soib_migyears.RData', 'shared/data/00_data/current_soib_migyears.RData')
 
 print("Generating done list")
-output_dir = Path("shared/output")
+output_dir = Path(f"shared/output/{mask}")
 output_dir.mkdir(parents=True, exist_ok=True)
 done_file = open(os.path.join(output_dir, "done.list"),"w")
 for trends_fname in trends_list:
