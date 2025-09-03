@@ -1309,7 +1309,6 @@ singlespeciesrun_internal = function(timegroups_names, master_table, species_to_
   data1 = data
   rm(data)
 
-  tic(paste("pre ed for", species_index))
   this_species_keys = species_to_keys[[as.character(species_index)]]
   # get information for the species of interest 
   specieslist2 = specieslist %>% filter(COMMON.NAME == species)
@@ -1330,53 +1329,6 @@ singlespeciesrun_internal = function(timegroups_names, master_table, species_to_
     }
   }
   
-  # filters data based on whether the species has been selected for long-term trends (ht) 
-  # or short-term trends (rt) 
-  # (if only recent, then need to filter for recent years. else, use all years so no filter.)
-  
-  if (singleyear == FALSE) {
-
-    if (is.na(specieslist2$ht) & !is.na(specieslist2$rt)) {
-      data1 = data1 %>% filter(year >= soib_year_info("cat_start"))
-    }
-  
-  } else if (singleyear == TRUE) {
-
-    data1 = data1 %>% filter(year == soib_year_info("latest_year"))
-  }
-
-  
-  data1 = data1 %>%
-    filter(COMMON.NAME == species_index) %>%
-    distinct(gridg3, month) %>% 
-    left_join(data1) %>%
-    suppressMessages()
-
-  dataset_size = nrow(data1)
-
-  tm = data1 %>% distinct(timegroups)
-  #rm(data, pos = ".GlobalEnv")
-  
-  datay = data1 %>%
-    distinct(gridg3, gridg1, group.id, .keep_all = TRUE) %>% 
-    group_by(gridg3, gridg1) %>% 
-    reframe(medianlla = median(no.sp)) %>%
-    group_by(gridg3) %>% 
-    reframe(medianlla = mean(medianlla)) %>%
-    reframe(medianlla = round(mean(medianlla)))
-  
-  medianlla = datay$medianlla
-  toc()
-  # expand dataframe to include absences as well
-  ed1 = expand_dt(data1, species_index) %>%
-    # converting months to seasons
-    mutate(month = as.numeric(month)) %>%
-    mutate(month = case_when(month %in% c(12,1,2) ~ "Win",
-                             month %in% c(3,4,5) ~ "Sum",
-                             month %in% c(6,7,8) ~ "Mon",
-                             month %in% c(9,10,11) ~ "Aut")) %>%
-    mutate(month = as.factor(month))
-
   # Fast method to compute ed
   tic(paste("ed alt", species_index))
   # Range - gridg3, month where this species is known
@@ -1387,21 +1339,36 @@ singlespeciesrun_internal = function(timegroups_names, master_table, species_to_
   ed <- ed %>%
    mutate(OBSERVATION.COUNT = as.numeric(grepl(species_comma, species_list)))
   # debugging : don't remove group.id and species_list for
-  # debug. This helps verify, along with the dump below
-  ed$group.id <- NULL
-  ed$species_list <- NULL
+  # debug. This helps verify the results
+  #ed$group.id <- NULL
+  #ed$species_list <- NULL
   ed$key <- NULL
   ed <- as.data.frame(ed) # back to df, probably not required
   toc()
 
+  dataset_size = nrow(ed)
+
+  tm = ed %>% distinct(timegroups)
+  #rm(data, pos = ".GlobalEnv")
+
+  tic(paste("datay", species_index))
+  datay = ed %>%
+    group_by(gridg3, gridg1) %>%
+    reframe(medianlla = median(no.sp)) %>%
+    group_by(gridg3) %>%
+    reframe(medianlla = mean(medianlla)) %>%
+    reframe(medianlla = round(mean(medianlla)))
+
+  medianlla = datay$medianlla
   # debugging: Dump old and new approaches so that we can compare
   #save(ed1, file="ed-prev.RData")
   #save(ed, file="ed-new.RData")
 
   # save some values referenced later so we can get rid of memory hog data1
-  gg1 <- data1$gridg1[1]
-  gg3 <- data1$gridg3[1]
+  gg1 <- ed$gridg1[1]
+  gg3 <- ed$gridg3[1]
   rm(data1)
+  toc()
 
   # the model ---------------------------------------------------------------
   
