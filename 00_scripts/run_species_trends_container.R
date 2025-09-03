@@ -140,6 +140,7 @@ if (to_run == TRUE) {
     rgid_path <- paste0(dirname(databins_path_data),"/rgids-", k, ".RData")
     message(paste("Loading", rgid_path))
     load(rgid_path) # loads randomgroupids
+    message("Rows in rgid : ", length(randomgroupids))
 
     # Subset data to match assignment
     data_filt <- data[data$group.id %in% randomgroupids, ]
@@ -152,6 +153,46 @@ if (to_run == TRUE) {
     } else if (singleyear == TRUE) {
       c("gridg1", "gridg3", "month")
     }
+
+    message("Computing master table")
+    tic("Master table")
+    #
+    # Generate a master table that allows fast lookup from (gridg3,month) combinations
+    # into the grouped fields for a group.id
+    # Basically, adds a "key" = gridg3*1000+month
+    # all species names sharing this key are collapsed into a comma separated string.
+    # presence/absence of a species becomes a simple matter of searching for the species
+    # in this comma sepearated string
+    # month is transformed to be season based, to avoid repeating this multiple times
+    master_table <- data_filt %>%
+      group_by(gridg3, gridg1, month, no.sp, timegroups, group.id) %>%
+      summarise(species_list = paste0(",",paste0(unique(COMMON.NAME),collapse=","), ","), .groups = 'drop') %>%
+      mutate(key = gridg3 * 1000 + month) %>%
+      mutate(month = case_when(month %in% c(12,1,2) ~ as.factor("Win"),
+                             month %in% c(3,4,5) ~ as.factor("Sum"),
+                             month %in% c(6,7,8) ~ as.factor("Mon"),
+                             month %in% c(9,10,11) ~ as.factor("Aut"))) %>%
+      mutate(across(.cols = all_of(cols_temp), ~ as.factor(.)))
+    toc()
+
+    # Set a key for faster lookup later
+    master_table <- as.data.table(master_table)
+    setkey(master_table, key)
+
+    tic("species_to_keys")
+    # TLDR: For each species, we create a ready to use list of keys
+    # The "range" of a species is the gridg3, month combinations in which
+    # it is seen. This sets up a lookup from the species to a list of
+    # keys.  If we pick up all the master_table rows that have those keys
+    # we are done, except for computing OBSERVATION.COUNT which is a matter
+    # of searching for the species in the species_list field
+    species_to_keys <- data_filt %>%
+      distinct(gridg3, month, COMMON.NAME) %>%  # Only keeps these 3 columns
+      mutate(key = gridg3 * 1000 + month) %>%
+      group_by(COMMON.NAME) %>%
+      summarise(values = list(sort(key)), .groups = 'drop') %>%
+      deframe()  # Convert to named list.
+    toc()
 
     data <- data_filt %>% 
       mutate(across(.cols = all_of(cols_temp), ~ as.factor(.))) %>% 
@@ -279,6 +320,9 @@ if (to_run == TRUE) {
 		    singlespeciesrun(
 		       stats_dir = trends_stats_dir,
 		       species_dir = trends_species_dir,
+		       timegroups_names = timegroups_names,
+		       master_table = master_table,
+		       species_to_keys = species_to_keys,
 		       data = data,
 		       species_index = species_index,
                        species = launch_species,
@@ -298,7 +342,8 @@ if (to_run == TRUE) {
 
 	  if(have_run_stats) {
 	    message("Started: ",
-                  launch_species, ", estimated peakRAM: ",
+                  launch_species, 
+		  " index: ", species_index, ", estimated peakRAM: ",
                   as.integer(min_ram_needed/1000000), " MB,",
                   " runtime: ", run_duration, " seconds")
           } else {

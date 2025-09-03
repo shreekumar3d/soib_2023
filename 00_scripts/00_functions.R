@@ -1302,13 +1302,15 @@ filt_data_for_mig <- function(data, species_var, status_var) {
 ### run models ########################################
 
 # trends
-singlespeciesrun_internal = function(data, species_index, species, specieslist, restrictedspecieslist,
+singlespeciesrun_internal = function(timegroups_names, master_table, species_to_keys, data, species_index, species, specieslist, restrictedspecieslist,
                             singleyear = FALSE)
 {
 
   data1 = data
   rm(data)
-  
+
+  tic(paste("pre ed for", species_index))
+  this_species_keys = species_to_keys[[as.character(species_index)]]
   # get information for the species of interest 
   specieslist2 = specieslist %>% filter(COMMON.NAME == species)
   
@@ -1364,16 +1366,37 @@ singlespeciesrun_internal = function(data, species_index, species, specieslist, 
     reframe(medianlla = round(mean(medianlla)))
   
   medianlla = datay$medianlla
-  
+  toc()
   # expand dataframe to include absences as well
-  ed = expand_dt(data1, species_index) %>%
+  ed1 = expand_dt(data1, species_index) %>%
     # converting months to seasons
-    mutate(month = as.numeric(month)) %>% 
+    mutate(month = as.numeric(month)) %>%
     mutate(month = case_when(month %in% c(12,1,2) ~ "Win",
                              month %in% c(3,4,5) ~ "Sum",
                              month %in% c(6,7,8) ~ "Mon",
-                             month %in% c(9,10,11) ~ "Aut")) %>% 
+                             month %in% c(9,10,11) ~ "Aut")) %>%
     mutate(month = as.factor(month))
+
+  # Fast method to compute ed
+  tic(paste("ed alt", species_index))
+  # Range - gridg3, month where this species is known
+  ed <- master_table[J(this_species_keys), nomatch=0]
+  # add a pre and a post comma to ensure no partial/bad matches !
+  species_comma = paste0(",",species_index,",")
+  # species observed/not is a matter of it's in the species list or not
+  ed <- ed %>%
+   mutate(OBSERVATION.COUNT = as.numeric(grepl(species_comma, species_list)))
+  # debugging : don't remove group.id and species_list for
+  # debug. This helps verify, along with the dump below
+  ed$group.id <- NULL
+  ed$species_list <- NULL
+  ed$key <- NULL
+  ed <- as.data.frame(ed) # back to df, probably not required
+  toc()
+
+  # debugging: Dump old and new approaches so that we can compare
+  #save(ed1, file="ed-prev.RData")
+  #save(ed, file="ed-new.RData")
 
   # save some values referenced later so we can get rid of memory hog data1
   gg1 <- data1$gridg1[1]
@@ -1391,6 +1414,7 @@ singlespeciesrun_internal = function(data, species_index, species, specieslist, 
 
   model_formula <- as.formula(glue("{fixed_effects} {include_timegroups} {random_effects}"))
 
+  tic(paste("glm", species_index))
   m1 <- if (flag != 2) {
     glmer(model_formula, 
           data = ed, family = binomial(link = 'cloglog'), 
@@ -1399,8 +1423,10 @@ singlespeciesrun_internal = function(data, species_index, species, specieslist, 
     glm(model_formula, 
         data = ed, family = binomial(link = 'cloglog'))
   }
+  toc()
   
 
+  tic(paste("predictInterval", species_index))
   # predicting from model ---------------------------------------------------
 
   # prepare a new data file to predict
@@ -1468,7 +1494,7 @@ singlespeciesrun_internal = function(data, species_index, species, specieslist, 
     } else if (singleyear == TRUE) {
       reframe(., freq = mean(freqt), se = mean(set))
     }}
-  
+  toc()
   
 
   tocomb = c(dataset_size, species, f1$freq, f1$se)
@@ -1477,10 +1503,10 @@ singlespeciesrun_internal = function(data, species_index, species, specieslist, 
   
 }
 
-singlespeciesrun = function(stats_dir, species_dir, data, species_index, species, specieslist, restrictedspecieslist,
+singlespeciesrun = function(stats_dir, species_dir, timegroups_names, master_table, species_to_keys, data, species_index, species, specieslist, restrictedspecieslist,
                             singleyear = FALSE)
 {
-  ram <- peakRAM(retval <- singlespeciesrun_internal(data, species_index, species, specieslist, restrictedspecieslist, singleyear))
+  ram <- peakRAM(retval <- singlespeciesrun_internal(timegroups_names, master_table, species_to_keys, data, species_index, species, specieslist, restrictedspecieslist, singleyear))
   run_stats <- data.frame(data_rows = retval[1],
                           time = ram$Elapsed_Time_sec,
                           max_ram = ram$Peak_RAM_Used_MiB,
