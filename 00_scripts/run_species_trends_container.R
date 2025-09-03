@@ -165,7 +165,8 @@ if (to_run == TRUE) {
     # in this comma sepearated string
     # month is transformed to be season based, to avoid repeating this multiple times
     master_table <- data_filt %>%
-      group_by(gridg3, gridg1, month, no.sp, timegroups, group.id) %>%
+      filter(ALL.SPECIES.REPORTED == 1) %>%
+      group_by(gridg3, gridg1, month, no.sp, timegroups, group.id, ALL.SPECIES.REPORTED) %>%
       summarise(species_list = paste0(",",paste0(unique(COMMON.NAME),collapse=","), ","), .groups = 'drop') %>%
       mutate(key = gridg3 * 1000 + month) %>%
       mutate(month = case_when(month %in% c(12,1,2) ~ as.factor("Win"),
