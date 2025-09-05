@@ -18,7 +18,7 @@ cp 00_data/current_soib_migyears.RData soib-container/data/00_data
 cp 01_analyses_full/dataforanalyses.RData-data_opt soib-container/data/01_analyses_full
 cp 01_analyses_full/dataforanalyses.RData-metadata soib-container/data/01_analyses_full
 cp 01_analyses_full/species_names.RData soib-container/data/01_analyses_full
-cp 01_analyses_full/timegroups.RData soib-container/data/01_analyses_full_data
+cp 01_analyses_full/timegroups.RData soib-container/data/01_analyses_full
 # All random groupids
 cp 01_analyses_full/rgids-*.RData soib-container/data/01_analyses_full/
 # Stats to guide scheduling
