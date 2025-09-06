@@ -300,15 +300,11 @@ Check the NFS mount
     -rw-r--r-- 1 root root 114 Aug 31 07:03 head_node_ready.txt
     azureuser@vm-head-node:~$ 
 
-Install required packages on the head node (from local machine):
-
-    $ ssh azureuser@20.42.21.40 /shared/scripts/head-node-setup.sh
-
 At this point, you can copy over the data files, using the following command.
 This command copies potentially multiple GBs of data to the cloud head node.
 So expect it to take some time:
 
-    $ ./sync-to-remote.sh azureuser@20.42.21.40
+    $ ./sync-to-remote.sh
     Syncing shared directory to azureuser@20.42.21.40
     The authenticity of host '20.42.21.40 (20.42.21.40)' can't be established.
     ED25519 key fingerprint is SHA256:2BBqNfVHnydvZ7aY05RTzgWUxs5BaZuvngEjJzRkzMA.
@@ -362,6 +358,10 @@ So expect it to take some time:
     total size is 474,025,505  speedup is 1.00
     rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]
 
+Install required packages on the head node (from local machine):
+
+    $ ./do-head-node-setup.sh
+
 
 # Allocating compute nodes
 
@@ -391,7 +391,7 @@ To do that:
 
 # Setting up the Cluster for Job Execution
 
-    $  ssh -A azureuser@20.42.21.40 /shared/scripts/cluster-setup.sh
+    $  ./do-cluster-setup.sh
 
 Note: the "-A" is important, else the script will fail.
 
@@ -402,7 +402,7 @@ every compute node, including the azure CLI and the SoIB container.
 
 You can now start the job:
 
-    $ ssh -A azureuser@20.42.21.40 /shared/scripts/launch-job.py
+    $ ./do-cluster-job.sh
     Starting jobs on:
       vm-compute-node-1
       vm-compute-node-2
@@ -411,7 +411,7 @@ You can now start the job:
 # Checking job status
 
 From your local node, run
-    $ ssh azureuser@20.42.21.40 /shared/scripts/job-status.py
+    $ ./check-job-status.sh
     Monitoring: /shared/output/Uttarakhand
     2025-09-02 00:50:28 Total: 10, Pending: 10
     Done: /shared/output/Uttarakhand/vm-compute-node-1/6/trends_6.csv
@@ -450,7 +450,7 @@ locally
 
 Run this command. It copies the results to subdirectory "cluster_results".
 
-    $ ./sync-from-remote.sh azureuser@20.42.21.40
+    $ ./sync-from-remote.sh
 
 cluster_results has a few subdirectories:
 
@@ -484,6 +484,10 @@ this:
 # Freeing Up Resources
 
 At any time, you can free up resources by running
+
+    $ ./set-compute-node-state.py
+
+Followed by
 
     $ terraform destroy
 

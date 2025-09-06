@@ -1,4 +1,4 @@
 #!/bin/sh
 
 # Packages we need
-sudo apt install python3-inotify
+sudo apt update && sudo apt install -y python3-inotify
