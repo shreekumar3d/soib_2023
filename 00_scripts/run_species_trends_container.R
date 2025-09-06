@@ -100,9 +100,6 @@ if (to_run == TRUE) {
   }
 
   # delete coulumns gridg2 and gridg4
-  data$gridg2 <- NULL
-  data$gridg4 <- NULL
-  data$gridg0 <- NULL
   data$OBSERVER.ID <- NULL
 
   for (k in cur_assignment)

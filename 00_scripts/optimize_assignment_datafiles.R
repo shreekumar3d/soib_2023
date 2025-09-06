@@ -79,8 +79,13 @@ if (to_run == TRUE) {
   data$group.id <- convert_group_id(data$group.id)
   data$OBSERVER.ID <- convert_observer_id(data$OBSERVER.ID)
 
+  # These aren't used in the code later - remove them
+  data$gridg0 <- NULL
+  data$gridg2 <- NULL
+  data$gridg4 <- NULL
+
   after = as.numeric(object.size(data))
-  percent <- (after/before)*100.0
+  percent <- ((before-after)/before)*100.0
   percent_str <- format(round(percent, 2), nsmall = 2)
   message(paste("Size of data AFTER= ", as_mb(after), "MB Savings=", percent_str, "%"))
 
