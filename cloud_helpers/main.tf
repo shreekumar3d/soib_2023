@@ -23,7 +23,7 @@ variable "compute_node_count" {
 # Create a resource group
 resource "azurerm_resource_group" "cluster_rg" {
   name     = "soib-cluster"
-  location = "East US"
+  location = "Central India"
 }
 
 # Create a virtual network
