@@ -1302,14 +1302,13 @@ filt_data_for_mig <- function(data, species_var, status_var) {
 ### run models ########################################
 
 # trends
-singlespeciesrun_internal = function(timegroups_names, master_table, species_to_keys, data, species_index, species, specieslist, restrictedspecieslist,
+singlespeciesrun_internal = function(data, species_index, species, specieslist, restrictedspecieslist,
                             singleyear = FALSE)
 {
 
   data1 = data
   rm(data)
-
-  this_species_keys = species_to_keys[[as.character(species_index)]]
+  
   # get information for the species of interest 
   specieslist2 = specieslist %>% filter(COMMON.NAME == species)
   
@@ -1329,46 +1328,57 @@ singlespeciesrun_internal = function(timegroups_names, master_table, species_to_
     }
   }
   
-  # Fast method to compute ed
-  tic(paste("ed alt", species_index))
-  # Range - gridg3, month where this species is known
-  ed <- master_table[J(this_species_keys), nomatch=0]
-  # add a pre and a post comma to ensure no partial/bad matches !
-  species_comma = paste0(",",species_index,",")
-  # species observed/not is a matter of it's in the species list or not
-  ed <- ed %>%
-   mutate(OBSERVATION.COUNT = as.numeric(grepl(species_comma, species_list)))
-  # debugging : don't remove group.id and species_list for
-  # debug. This helps verify the results
-  #ed$group.id <- NULL
-  #ed$species_list <- NULL
-  ed$key <- NULL
-  ed <- as.data.frame(ed) # back to df, probably not required
-  toc()
+  # filters data based on whether the species has been selected for long-term trends (ht) 
+  # or short-term trends (rt) 
+  # (if only recent, then need to filter for recent years. else, use all years so no filter.)
+  
+  if (singleyear == FALSE) {
 
-  dataset_size = nrow(ed)
+    if (is.na(specieslist2$ht) & !is.na(specieslist2$rt)) {
+      data1 = data1 %>% filter(year >= soib_year_info("cat_start"))
+    }
+  
+  } else if (singleyear == TRUE) {
 
-  tm = ed %>% distinct(timegroups)
+    data1 = data1 %>% filter(year == soib_year_info("latest_year"))
+  }
+
+  
+  data1 = data1 %>%
+    filter(COMMON.NAME == species_index) %>%
+    distinct(gridg3, month) %>% 
+    left_join(data1) %>%
+    suppressMessages()
+
+  dataset_size = nrow(data1)
+
+  tm = data1 %>% distinct(timegroups)
   #rm(data, pos = ".GlobalEnv")
-
-  tic(paste("datay", species_index))
-  datay = ed %>%
-    group_by(gridg3, gridg1) %>%
+  
+  datay = data1 %>%
+    distinct(gridg3, gridg1, group.id, .keep_all = TRUE) %>% 
+    group_by(gridg3, gridg1) %>% 
     reframe(medianlla = median(no.sp)) %>%
-    group_by(gridg3) %>%
+    group_by(gridg3) %>% 
     reframe(medianlla = mean(medianlla)) %>%
     reframe(medianlla = round(mean(medianlla)))
-
+  
   medianlla = datay$medianlla
-  # debugging: Dump old and new approaches so that we can compare
-  #save(ed1, file="ed-prev.RData")
-  #save(ed, file="ed-new.RData")
+  
+  # expand dataframe to include absences as well
+  ed = expand_dt(data1, species_index) %>%
+    # converting months to seasons
+    mutate(month = as.numeric(month)) %>% 
+    mutate(month = case_when(month %in% c(12,1,2) ~ "Win",
+                             month %in% c(3,4,5) ~ "Sum",
+                             month %in% c(6,7,8) ~ "Mon",
+                             month %in% c(9,10,11) ~ "Aut")) %>% 
+    mutate(month = as.factor(month))
 
   # save some values referenced later so we can get rid of memory hog data1
-  gg1 <- ed$gridg1[1]
-  gg3 <- ed$gridg3[1]
+  gg1 <- data1$gridg1[1]
+  gg3 <- data1$gridg3[1]
   rm(data1)
-  toc()
 
   # the model ---------------------------------------------------------------
   
@@ -1381,7 +1391,6 @@ singlespeciesrun_internal = function(timegroups_names, master_table, species_to_
 
   model_formula <- as.formula(glue("{fixed_effects} {include_timegroups} {random_effects}"))
 
-  tic(paste("glm", species_index))
   m1 <- if (flag != 2) {
     glmer(model_formula, 
           data = ed, family = binomial(link = 'cloglog'), 
@@ -1390,10 +1399,8 @@ singlespeciesrun_internal = function(timegroups_names, master_table, species_to_
     glm(model_formula, 
         data = ed, family = binomial(link = 'cloglog'))
   }
-  toc()
   
 
-  tic(paste("predictInterval", species_index))
   # predicting from model ---------------------------------------------------
 
   # prepare a new data file to predict
@@ -1461,7 +1468,7 @@ singlespeciesrun_internal = function(timegroups_names, master_table, species_to_
     } else if (singleyear == TRUE) {
       reframe(., freq = mean(freqt), se = mean(set))
     }}
-  toc()
+  
   
 
   tocomb = c(dataset_size, species, f1$freq, f1$se)
@@ -1470,10 +1477,10 @@ singlespeciesrun_internal = function(timegroups_names, master_table, species_to_
   
 }
 
-singlespeciesrun = function(stats_dir, species_dir, timegroups_names, master_table, species_to_keys, data, species_index, species, specieslist, restrictedspecieslist,
+singlespeciesrun = function(stats_dir, species_dir, data, species_index, species, specieslist, restrictedspecieslist,
                             singleyear = FALSE)
 {
-  ram <- peakRAM(retval <- singlespeciesrun_internal(timegroups_names, master_table, species_to_keys, data, species_index, species, specieslist, restrictedspecieslist, singleyear))
+  ram <- peakRAM(retval <- singlespeciesrun_internal(data, species_index, species, specieslist, restrictedspecieslist, singleyear))
   run_stats <- data.frame(data_rows = retval[1],
                           time = ram$Elapsed_Time_sec,
                           max_ram = ram$Peak_RAM_Used_MiB,
