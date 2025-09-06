@@ -12,9 +12,14 @@ import glob
 from datetime import datetime
 from pprint import pprint
 
-def report(pending, all_outputs):
+def report(pending, all_outputs, partial=None, full=None):
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"{ts} Total: {len(all_outputs)}, Pending: {len(pending)}")
+    if partial:
+        print(f"{ts} Total: {len(all_outputs)}, Pending: {len(pending)} Step: {partial}")
+    elif full:
+        print(f"{ts} Total: {len(all_outputs)}, Pending: {len(pending)} Done: {full}")
+    else:
+        print(f"{ts} Total: {len(all_outputs)}, Pending: {len(pending)}")
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-1', '--once', action='store_true',
@@ -61,10 +66,11 @@ for event in tree_watch.event_gen():
         continue
     if(len(event[1])==1) and (event[1][0] == 'IN_CREATE'):
         full_path = os.path.join(event[2], event[3])
-        print(f'Done: {full_path}')
         if full_path in pending:
             #print(f'Removing: {full_path}')
             pending.remove(full_path)
-            report(pending, all_outputs)
+            report(pending, all_outputs, full=full_path)
+        else:
+            report(pending, all_outputs, partial=full_path)
     if len(pending)==0:
         break

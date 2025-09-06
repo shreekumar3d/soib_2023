@@ -80,10 +80,12 @@ script_dir.mkdir(parents=True, exist_ok=True)
 headnode_script = 'shared/scripts/cluster-setup.sh'
 hf = open(headnode_script, "w")
 hf.write('#!/bin/sh\n')
+hf.write('set -e\n') # exit on error
 for i in range(compute_nodes):
     hf.write(f'ssh-keyscan vm-compute-node-{i+1} >> ~/.ssh/known_hosts\n')
 for i in range(compute_nodes):
     hf.write(f'ssh vm-compute-node-{i+1} /bin/sh /shared/scripts/compute-node-setup.sh\n')
+hf.write(f'echo "Cluster setup OK"\n')
 hf.close()
 os.chmod(headnode_script, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
