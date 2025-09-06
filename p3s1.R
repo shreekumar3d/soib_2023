@@ -8,6 +8,11 @@
 # 1. Ensure sanity of setup (compare trends1.csv with reference)
 # 2. Benchmark execution performance
 #
+
+# We're managing threads ourselves. Disable OMP threads
+# as that can reduce performance due to contention.
+Sys.setenv(OMP_NUM_THREADS = 1)
+
 suppressPackageStartupMessages({
    library(tidyverse)
    library(Matrix)
