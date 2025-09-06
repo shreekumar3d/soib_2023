@@ -1180,18 +1180,6 @@ expandbyspecies = function(data, species)
 expand_dt = function(data, species, singleyear = FALSE) {
 
   setDT(data)
-  
-  
-    data <- data %>% 
-      lazy_dt(immutable = FALSE) |> 
-      mutate(across(contains("gridg"), ~ as.factor(.))) %>% 
-      {if (singleyear == FALSE) {
-        mutate(., timegroups = as.factor(timegroups))
-      } else if (singleyear == TRUE) {
-        .
-      }} |> 
-      as.data.table()
-
 
   # Get distinct rows and filter based on a condition
   # (using base data.table because lazy_dt with immutable == FALSE would
@@ -1248,7 +1236,7 @@ expand_dt = function(data, species, singleyear = FALSE) {
       left_join(data |> lazy_dt(immutable = FALSE),
                 by = join_by_temp) %>%
       dplyr::select(-c("COMMON.NAME",
-                       "ALL.SPECIES.REPORTED","group.id","year","gridg0")) %>% 
+                       "ALL.SPECIES.REPORTED","group.id","year")) %>%
       # deal with NAs (column is character)
       mutate(OBSERVATION.COUNT = case_when(is.na(OBSERVATION.COUNT) ~ 0,
                                            OBSERVATION.COUNT != 0 ~ 1,
