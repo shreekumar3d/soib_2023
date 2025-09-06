@@ -14,12 +14,14 @@ rm -rf shared
 # nodes (default)
 #
 # Job config will be stored in the config.R (default)
+# use x86_64/aarch64 as architecture depending on
+# compute nodes
 ../py/bin/python3 setup-species-run.py \
 	--mask Uttarakhand \
 	--nodes 2 \
 	--threads 4 \
 	--assignment 6:15 \
-	--arch x86_64
+	--arch aarch64
 
 # It's possible to have more than 1 species run here, but that will be
 # considered "advanced" usage

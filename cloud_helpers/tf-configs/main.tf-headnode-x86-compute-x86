@@ -1,12 +1,13 @@
 # Config file for cluster
 #
 # Headnode : x86_64 (D4s_v3 - 4 core/16GB RAM)
-# Compute Nodes : ARM64 (aarch64) (D4ps_v6 - 4 core/16GB RAM)
+# Compute Nodes : x86_64 (aarch64) (F4as_v6 - 4 core/16GB RAM)
 #
 # Note images differ for head node and compute nodes due to
 # arch differences
 #
 # Head Node:
+#    publisher = "Canonical"
 #    offer     = "ubuntu-24_04-lts"
 #    sku       = "server"
 #    version   = "latest"
@@ -14,11 +15,8 @@
 # Compute Nodes:
 #    publisher = "Canonical"
 #    offer     = "ubuntu-24_04-lts"
-#    sku       = "server-arm64"
+#    sku       = "minimal"
 #    version   = "latest"
-#
-# FIXME in x86 we're using the minimal image in the compute
-# nodes. Do the same here?
 #
 # Configure the Azure Provider
 terraform {
@@ -244,7 +242,7 @@ resource "azurerm_linux_virtual_machine" "compute_nodes" {
   name                = "vm-compute-node-${count.index + 1}"
   resource_group_name = azurerm_resource_group.cluster_rg.name
   location            = azurerm_resource_group.cluster_rg.location
-  size                = "Standard_D4ps_v6"
+  size                = "Standard_F4as_v6"
   admin_username      = "azureuser"
 
   disable_password_authentication = true
@@ -267,7 +265,7 @@ resource "azurerm_linux_virtual_machine" "compute_nodes" {
   source_image_reference {
     publisher = "Canonical"
     offer     = "ubuntu-24_04-lts"
-    sku       = "server-arm64"
+    sku       = "minimal"
     version   = "latest"
   }
 
