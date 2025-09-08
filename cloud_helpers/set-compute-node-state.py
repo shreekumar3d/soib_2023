@@ -47,7 +47,7 @@ def check_node_status():
 all_not_on, vm_list = check_node_status()
 
 if all_not_on:
-    print("Ensuring ALL are ON...")
+    print("Ensuring ALL are RUNNING...")
     result = run_az_command(["az", "vm", "start", "--ids"]+vm_list)
     all_not_on, vm_list = check_node_status()
     if all_not_on:

@@ -12,5 +12,6 @@ for node in nodes:
     print(f'  {node}')
     proc = subprocess.Popen(["ssh", node, cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 time.sleep(1)
-print("Nodes will shutdown once done. Monitor outputs for progress.")
+print("\nCompute nodes will automatically shutdown once done.")
+print("Please monitor outputs to track progress.")
 

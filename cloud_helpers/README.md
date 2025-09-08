@@ -291,7 +291,7 @@ And you will get some usage instructions as well:
 
 You can use the IP address to login, as described in the instructions:
 
-    $ ssh -A azureuser@52.190.20.156
+    $ ssh -A azureuser@<head_node_ip>
 
 Check the NFS mount
 
@@ -392,8 +392,6 @@ To do that:
 # Setting up the Cluster for Job Execution
 
     $  ./do-cluster-setup.sh
-
-Note: the "-A" is important, else the script will fail.
 
 This script will take a few minutes.  It will install the dependencies required in
 every compute node, including the azure CLI and the SoIB container.
@@ -579,3 +577,27 @@ Status could be "VM running", "VM stopped" or "VM deallocated"
 ###
 
 $ az vm show --resource-group soib-cluster --name vm-compute-node-1 --query hardwareProfile.vmSize
+
+# Quick Reference Commands
+
+Once you get used to running the commands, you might find the following list and sequence
+a better way to remember the order:
+
+    $ ./setup-cluster-job.sh
+    $ terraform apply
+    $ ./sync-to-remote.sh
+    $ ./do-head-node-setup.sh
+    $ terraform apply -var="compute_node_count=2"
+    $ ./setup-node-rights.py
+    $ ./compute-nodes-nfs-ready.py
+    $ ./do-cluster-setup.sh
+    $ ./start-cluster-job.sh
+    $ ./check-job-status.sh
+    $ ./sync-from-remote.sh
+    $ ./set-compute-node-state.py
+    $ terraform destroy
+    $ cd ..
+    $ ./collect-trends-results.py -v cloud_helpers/cluster_results/output
+
+At any time, to check cluster status, run:
+    $ ./show-cluster-status.sh
