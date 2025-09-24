@@ -242,7 +242,11 @@ if (to_run == TRUE) {
     if(have_run_stats) {
       species_pending_list <- as.vector(run_stats$species_name)
     } else {
-      species_pending_list <- listofspecies
+      if(length(species_to_process)==0) {
+        species_pending_list <- listofspecies
+      } else {
+        species_pending_list <- species_to_process
+      }
     }
 
     # Keep going as long as we have species to run, or threads active
@@ -274,6 +278,7 @@ if (to_run == TRUE) {
 
 	  proc <- mcparallel(
 		    singlespeciesrun(
+		       reproducible = reproducible_run,
 		       stats_dir = trends_stats_dir,
 		       species_dir = trends_species_dir,
 		       data = data,

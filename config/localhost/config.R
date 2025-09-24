@@ -45,3 +45,11 @@ species_to_process <- c(
 # 3 GB margin to account for no process kills on Mac. Higher
 # need for this if you set ram_interleave to FALSE
 #ram_safety_margin <- 3000
+
+# Set "Reproducible run" to TRUE to help compare results
+# between different software/hardware environments.
+# This locks the random seed at the start of every singlespeciesrun
+# Idea is that if you take care to use the same randomgroupids,
+# you must get the same results every time
+# default value is FALSE
+#reproducible_run <- TRUE

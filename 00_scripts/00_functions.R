@@ -1299,13 +1299,18 @@ filt_data_for_mig <- function(data, species_var, status_var) {
 ### run models ########################################
 
 # trends
-singlespeciesrun_internal = function(data, species_index, species, specieslist, restrictedspecieslist,
+singlespeciesrun_internal = function(reproducible, data, species_index, species, specieslist, restrictedspecieslist,
                             singleyear = FALSE)
 {
 
   data1 = data
   rm(data)
-  
+
+  if(reproducible) {
+    message("Setting seed to 0 to ensure reproducible runs")
+    set.seed(0)
+  }
+
   # get information for the species of interest 
   specieslist2 = specieslist %>% filter(COMMON.NAME == species)
   
@@ -1474,10 +1479,11 @@ singlespeciesrun_internal = function(data, species_index, species, specieslist, 
   
 }
 
-singlespeciesrun = function(stats_dir, species_dir, data, species_index, species, specieslist, restrictedspecieslist,
-                            singleyear = FALSE)
+singlespeciesrun = function(reproducible, stats_dir, species_dir, data, species_index, species,
+			    specieslist, restrictedspecieslist, singleyear = FALSE)
 {
-  ram <- peakRAM(retval <- singlespeciesrun_internal(data, species_index, species, specieslist, restrictedspecieslist, singleyear))
+  ram <- peakRAM(retval <- singlespeciesrun_internal(reproducible, data, species_index, species,
+						     specieslist, restrictedspecieslist, singleyear))
   run_stats <- data.frame(data_rows = retval[1],
                           time = ram$Elapsed_Time_sec,
                           max_ram = ram$Peak_RAM_Used_MiB,

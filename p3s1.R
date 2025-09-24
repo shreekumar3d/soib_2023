@@ -65,6 +65,10 @@ if(!exists('ram_safety_margin')) {
   ram_safety_margin <- 0
 }
 
+if(!exists('reproducible_run')) {
+  reproducible_run <- FALSE
+}
+
 if(!exists('ram_interleave')) {
   ram_interleave <- TRUE
 }
