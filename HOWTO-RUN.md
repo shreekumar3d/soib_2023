@@ -25,25 +25,20 @@ $ ulimit -s unlimited
 
 ## Run Part 1, Step 1
 
-$ time Rscript p1s1.R
+    $ time Rscript p1s1.R
 
-There was 1 warning in `filter()`.
-ℹ In argument: `|...`.
-Caused by warning in `SAMPLING.EVENT.IDENTIFIER == c("S134340928", "S42696454", "S188588052",
-    "S80680772", "S133479192", "S133022415", "S42127790", "S129418458",
-    "S128838955", "S65035483", "S51110638")`:
-! longer object length is not a multiple of shorter object length 
-Reading and cleaning raw data: 1166.348 sec elapsed
+    Reading and cleaning raw data: 1718.835 sec elapsed
 
-real	19m30.464s
-user	14m33.595s
-sys	4m51.445s
+    real	28m43.566s
+    user	22m31.544s
+    sys	    6m6.424s
 
 Running this also overwrites these files which are under source control:
 
-- 00_data/current_soib_migyears.RData
 - 00_data/analyses_metadata.RData
-- 00_data/spec_misid.RData
+- 00_data/current_soib_migyears.RData
+- 00_data/eBird_location_data.csv
+- 00_data/indiaspecieslist.csv
 
 Next copy sensitive species map
 
@@ -53,11 +48,11 @@ $ cp ~/biz/soib/data-packages/jul-30-ashwin/Spatial\ files/maps_pa_sf.RData 00_d
 
 $ time Rscript p1s2.R
 
-adding map and grid variables to dataset: 334.793 sec elapsed
+Adding map and grid variables to dataset: 496.597 sec elapsed
 
-real	5m37.685s
-user	5m25.653s
-sys	0m11.869s
+real	8m19.929s
+user	8m4.873s
+sys	0m14.636s
 
 Note thas step Does not change any tracked files.
 
@@ -72,12 +67,11 @@ is required.
 
     $ time Rscript p1s3.R
 
-    Species list is already updated to latest taxonomy. Returning original list.
-    Processing and filtering data for analyses: 631.324 sec elapsed
+    Processing and filtering data for analyses: 999.386 sec elapsed
 
-    real    10m34.294s
-    user    9m33.472s
-    sys	    1m0.329s
+    real	16m42.386s
+    user	15m25.444s
+    sys	1m16.115s
 
 Running p1s3.R changes these files, which are all tracked under git:
 
@@ -132,11 +126,12 @@ Everything is ready to run the next step
     $ time Rscript p2s1.R
 
     ...
-    generated random group IDs for all states: 142.96 sec elapsed
+    generated random group IDs for all states: 175.028 sec elapsed
 
-    real    7m38.232s
-    user    7m17.255s
-    sys	    0m20.684s
+    real	8m48.239s
+    user	8m25.126s
+    sys  	0m22.606s
+
 
 ## Run Part 2, Step 2
 
@@ -149,13 +144,12 @@ data:
     $ time Rscript p2s2.R
 
     ...
+    Generated subsampled data for Puducherry state: 1.736 sec elapsed
+    Generated subsampled data for all states: 260.871 sec elapsed
 
-    Generated subsampled data for Puducherry state: 1.182 sec elapsed
-    Generated subsampled data for all states: 202.895 sec elapsed
-
-    real    6m37.397s
-    user    30m47.013s
-    sys     0m27.133s
+    real	9m15.443s
+    user	53m27.440s
+    sys 	0m29.929s
 
 ## Run Part 3, Step 1
 
@@ -174,12 +168,12 @@ run:
     $ export OMP_NUM_THREADS=1
     $ time Rscript p3s1.R
     ....
-    Species trends for none: 1/1: 2392.163 sec elapsed
-    Species trends for mask none (sims 1:1): 2401.14 sec elapsed
+    Species trends for none: 1/1: 3247.166 sec elapsed
+    Species trends for mask none (sims 1:1): 3259.361 sec elapsed
 
-    real    40m3.312s
-    user    579m59.924s
-    sys     56m27.913s
+    real	54m21.398s
+    user	804m45.533s
+    sys	    61m58.485s
 
 
 First time runs don't dump info about script runtime estimates,
