@@ -1,7 +1,7 @@
 # Config file for cluster
 #
 # Headnode : x86_64 (D4s_v3 - 4 core/16GB RAM)
-# Compute Nodes : ARM64 (aarch64) (D4ps_v6 - 4 core/16GB RAM)
+# Compute Nodes : ARM64 (aarch64) (D96ps_v6 - 96 core/384GB RAM)
 #
 # Note images differ for head node and compute nodes due to
 # arch differences
@@ -33,6 +33,7 @@ terraform {
 # Configure the Microsoft Azure Provider
 provider "azurerm" {
   features {}
+  skip_provider_registration = true
 }
 
 # Variable to control number of compute nodes
@@ -43,23 +44,25 @@ variable "compute_node_count" {
 }
 
 # Create a resource group
-resource "azurerm_resource_group" "cluster_rg" {
-  name     = "soib-cluster"
-  location = "Central India"
+data "azurerm_resource_group" "cluster_rg" {
+  name     = "SoIBAnalysis"
 }
 
 # Create a virtual network
 resource "azurerm_virtual_network" "cluster_vnet" {
   name                = "vnet-cluster"
   address_space       = ["10.0.0.0/16"]
-  location            = azurerm_resource_group.cluster_rg.location
-  resource_group_name = azurerm_resource_group.cluster_rg.name
+  location            = data.azurerm_resource_group.cluster_rg.location
+  resource_group_name = data.azurerm_resource_group.cluster_rg.name
+  tags = {
+    Environment = "SoIBAnalysis"
+  }
 }
 
 # Create a subnet
 resource "azurerm_subnet" "cluster_subnet" {
   name                 = "subnet-cluster"
-  resource_group_name  = azurerm_resource_group.cluster_rg.name
+  resource_group_name  = data.azurerm_resource_group.cluster_rg.name
   virtual_network_name = azurerm_virtual_network.cluster_vnet.name
   address_prefixes     = ["10.0.1.0/24"]
 }
@@ -67,8 +70,8 @@ resource "azurerm_subnet" "cluster_subnet" {
 # Create Network Security Group and rules
 resource "azurerm_network_security_group" "cluster_nsg" {
   name                = "nsg-cluster"
-  location            = azurerm_resource_group.cluster_rg.location
-  resource_group_name = azurerm_resource_group.cluster_rg.name
+  location            = data.azurerm_resource_group.cluster_rg.location
+  resource_group_name = data.azurerm_resource_group.cluster_rg.name
 
   # Allow SSH from internet to head node
   security_rule {
@@ -126,8 +129,8 @@ resource "azurerm_network_security_group" "cluster_nsg" {
 # Create public IP for head node
 resource "azurerm_public_ip" "head_node_public_ip" {
   name                = "pip-head-node"
-  resource_group_name = azurerm_resource_group.cluster_rg.name
-  location            = azurerm_resource_group.cluster_rg.location
+  resource_group_name = data.azurerm_resource_group.cluster_rg.name
+  location            = data.azurerm_resource_group.cluster_rg.location
   allocation_method   = "Static"
   sku                = "Standard"
 }
@@ -135,8 +138,8 @@ resource "azurerm_public_ip" "head_node_public_ip" {
 # Create Network Interface for head node
 resource "azurerm_network_interface" "head_node_nic" {
   name                = "nic-head-node"
-  location            = azurerm_resource_group.cluster_rg.location
-  resource_group_name = azurerm_resource_group.cluster_rg.name
+  location            = data.azurerm_resource_group.cluster_rg.location
+  resource_group_name = data.azurerm_resource_group.cluster_rg.name
 
   ip_configuration {
     name                          = "internal"
@@ -145,14 +148,17 @@ resource "azurerm_network_interface" "head_node_nic" {
     private_ip_address            = "10.0.1.4"
     public_ip_address_id          = azurerm_public_ip.head_node_public_ip.id
   }
+  tags = {
+    Environment = "SoIBAnalysis"
+  }  
 }
 
 # Create Network Interfaces for compute nodes (only if compute_node_count > 0)
 resource "azurerm_network_interface" "compute_node_nic" {
   count               = var.compute_node_count
   name                = "nic-compute-node-${count.index + 1}"
-  location            = azurerm_resource_group.cluster_rg.location
-  resource_group_name = azurerm_resource_group.cluster_rg.name
+  location            = data.azurerm_resource_group.cluster_rg.location
+  resource_group_name = data.azurerm_resource_group.cluster_rg.name
 
   ip_configuration {
     name                          = "internal"
@@ -177,8 +183,8 @@ resource "azurerm_network_interface_security_group_association" "compute_node_ns
 # Create head node VM
 resource "azurerm_linux_virtual_machine" "head_node" {
   name                = "vm-head-node"
-  resource_group_name = azurerm_resource_group.cluster_rg.name
-  location            = azurerm_resource_group.cluster_rg.location
+  resource_group_name = data.azurerm_resource_group.cluster_rg.name
+  location            = data.azurerm_resource_group.cluster_rg.location
   size                = "Standard_D4s_v3"
   admin_username      = "azureuser"
 
@@ -242,9 +248,9 @@ resource "azurerm_linux_virtual_machine" "head_node" {
 resource "azurerm_linux_virtual_machine" "compute_nodes" {
   count               = var.compute_node_count
   name                = "vm-compute-node-${count.index + 1}"
-  resource_group_name = azurerm_resource_group.cluster_rg.name
-  location            = azurerm_resource_group.cluster_rg.location
-  size                = "Standard_D4ps_v6"
+  resource_group_name = data.azurerm_resource_group.cluster_rg.name
+  location            = data.azurerm_resource_group.cluster_rg.location
+  size                = "Standard_D96ps_v6"
   admin_username      = "azureuser"
 
   disable_password_authentication = true
