@@ -559,24 +559,24 @@ glance:
 
 ### Query Status of a single VM
 
-    $ az vm show --resource-group soib-cluster --name vm-compute-node-1 -d --query powerState
+    $ az vm show --resource-group SoIBAnalysis --name vm-compute-node-1 -d --query powerState
 
 Status could be "VM running", "VM stopped" or "VM deallocated"
 
 ### Start VM
 
-    $ az vm start --resource-group soib-cluster --name vm-compute-node-1
+    $ az vm start --resource-group SoIBAnalysis --name vm-compute-node-1
 
 ### Stop VM
 
-    $ az vm stop --resource-group soib-cluster --name vm-compute-node-1
+    $ az vm stop --resource-group SoIBAnalysis --name vm-compute-node-1
 
     About to power off the specified VM...
     It will continue to be billed. To deallocate a VM, run: az vm deallocate.
 
 ###
 
-$ az vm show --resource-group soib-cluster --name vm-compute-node-1 --query hardwareProfile.vmSize
+$ az vm show --resource-group SoIBAnalysis --name vm-compute-node-1 --query hardwareProfile.vmSize
 
 # Quick Reference Commands
 

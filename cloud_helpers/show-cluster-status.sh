@@ -1,2 +1,2 @@
 #!/bin/bash
-az vm list --resource-group soib-cluster -d -o table
+az vm list --resource-group SoIBAnalysis -d -o table

@@ -20,7 +20,7 @@ def run_az_command(command):
         raise RuntimeError("Bad JSON from AZ command")
 
 
-node_list = run_az_command(["az", "vm", "list", "--resource-group", "soib-cluster", "-d"])
+node_list = run_az_command(["az", "vm", "list", "--resource-group", "SoIBAnalysis", "-d"])
 for node in node_list:
     if not node['name'].startswith('vm-compute-node'):
         continue

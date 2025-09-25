@@ -20,7 +20,7 @@ def run_az_command(command):
         raise RuntimeError("Bad JSON from AZ command")
 
 #print("All VMs are:")
-#node_list = run_az_command(["az", "vm", "list", "--resource-group", "soib-cluster", "-d"])
+#node_list = run_az_command(["az", "vm", "list", "--resource-group", "SoIBAnalysis", "-d"])
 #vm_list = []
 #for node in node_list:
 #    print(node['name'])
@@ -31,7 +31,7 @@ def check_node_status():
     vm_list = []
     needs_power_on = False
     print("State of VMs now is:")
-    node_list = run_az_command(["az", "vm", "list", "--resource-group", "soib-cluster", "-d"])
+    node_list = run_az_command(["az", "vm", "list", "--resource-group", "SoIBAnalysis", "-d"])
     #print(json.dumps(result, indent=4))
     for node in node_list:
         print(node['name'])
