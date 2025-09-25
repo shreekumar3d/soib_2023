@@ -13,11 +13,12 @@ convert_group_id <- function(x) {
   return(base + as.integer(substr(x,2,12)))
 }
 
+rgids <- randomgroupids
 for (i in 1:1000) {
-  remap <- convert_group_id(randomgroupids[,i])
-  this_assignment <- data.frame(group.id = remap)
+  remap <- convert_group_id(rgids[,i])
+  randomgroupids <- data.frame(group.id = remap)
   print(paste("Random group iteration:", i, "of 1000"))
-  save(this_assignment, file=paste0("01_analyses_full/rgids-",i,".RData"))
+  save(randomgroupids, file=paste0("01_analyses_full/rgids-",i,".RData"))
 }
 
 print("Done")
