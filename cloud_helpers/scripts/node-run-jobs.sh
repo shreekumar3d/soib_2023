@@ -34,4 +34,4 @@ rm /tmp/job-is-running
 echo "Shutting down and deallocating `hostname`"
 # Shutdown and deallocate this node in one step
 # PS: Hopefully the login won't fail!
-az login --identity && az vm deallocate -g soib-cluster -n `hostname`
+az login --identity && az vm deallocate -g SoIBAnalysis -n `hostname`
