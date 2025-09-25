@@ -31,7 +31,7 @@ group_values <- function(df) {
 write_rgids <- function(write_dir, rgids) {
   # use default compression. good enough for small sets
   for(i in 1:1000) {
-    randomgroupids <- rgids[,i]
+    randomgroupids <-as.integer(rgids[,i])
     save(randomgroupids, file = paste0(write_dir,"/rgids-",i,".RData"))
   }
 }
