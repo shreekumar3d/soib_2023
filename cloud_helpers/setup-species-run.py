@@ -64,6 +64,7 @@ my_assignment <- {assignment_start}:{assignment_end}
 species_to_process <- c(
 {species_to_process})
 force_trends_computation <- FALSE
+reproducible_run <- TRUE
 """
     cfg_path.mkdir(parents=True, exist_ok=True)
     open(cfg_file, 'w').write(cfg_text)
