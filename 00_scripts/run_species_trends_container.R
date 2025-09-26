@@ -99,6 +99,9 @@ if (to_run == TRUE) {
     message("No run stats, can't optimize")
   }
 
+  # delete coulumns gridg2 and gridg4
+  data$OBSERVER.ID <- NULL
+
   for (k in cur_assignment)
   {
     message("========================================")
@@ -143,14 +146,13 @@ if (to_run == TRUE) {
     data_filt$timegroups <- timegroups_names$timegroups[data_filt$timegroups]
 
     cols_temp <- if (singleyear == FALSE) {
-      c("gridg1", "gridg2", "gridg3", "gridg4", "month", "timegroups")
+      c("gridg1", "gridg3", "month", "timegroups")
     } else if (singleyear == TRUE) {
-      c("gridg1", "gridg2", "gridg3", "gridg4", "month")
+      c("gridg1", "gridg3", "month")
     }
 
     data <- data_filt %>% 
-      mutate(across(.cols = all_of(cols_temp), ~ as.factor(.))) %>%
-      mutate(gridg = gridg3)
+      mutate(across(.cols = all_of(cols_temp), ~ as.factor(.)))
 
     rm(cols_temp)
     
