@@ -19,6 +19,7 @@ parser.add_argument('-t','--threads', type=int, required=True)
 parser.add_argument('-m','--mask', type=str, required=True)
 parser.add_argument('-s','--species', type=str, action='append', default=[])
 parser.add_argument('-a','--assignment', type=str, default="1:1000")
+parser.add_argument('-p','--package', type=str, default="shared")
 parser.add_argument('-c','--config_R', type=str, default="config.R") # name of config file
 parser.add_argument('--arch', type=str, default="x86_64")
 args = parser.parse_args()
@@ -53,10 +54,13 @@ for i in range(compute_nodes):
     assignment_end += (assignment_min-1)
     if i==(compute_nodes-1):
         assignment_end = assignment_max
-    node = f'vm-compute-node-{i+1}'
+    if compute_nodes == 1:
+        node = 'localhost'
+    else:
+        node = f'vm-compute-node-{i+1}'
     print(f"node:{node} {assignment_start}:{assignment_end}")
     node_names.append(node)
-    cfg_path = Path(f'shared/config/{node}')
+    cfg_path = Path(f'{args.package}/config/{node}')
     cfg_file = os.path.join(cfg_path, args.config_R)
     cfg_text = f"""threads <- {threads}
 cur_mask <- "{mask}"
@@ -76,28 +80,32 @@ reproducible_run <- TRUE
         # we'll store the done list
         trends_list.append(f'{node}/{idx}/trends_{idx}.csv')
 
-script_dir = Path("shared/scripts")
+script_dir = Path(f"{args.package}/scripts")
 script_dir.mkdir(parents=True, exist_ok=True)
-headnode_script = 'shared/scripts/cluster-setup.sh'
+headnode_script = f'{args.package}/scripts/cluster-setup.sh'
 hf = open(headnode_script, "w")
 hf.write('#!/bin/sh\n')
 hf.write('set -e\n') # exit on error
 for i in range(compute_nodes):
     hf.write(f'ssh-keyscan vm-compute-node-{i+1} >> ~/.ssh/known_hosts\n')
 for i in range(compute_nodes):
-    hf.write(f'ssh vm-compute-node-{i+1} /bin/sh /shared/scripts/compute-node-setup.sh\n')
+    hf.write(f'ssh vm-compute-node-{i+1} /bin/sh /{args.package}/scripts/compute-node-setup.sh\n')
 hf.write(f'echo "Cluster setup OK"\n')
 hf.close()
 os.chmod(headnode_script, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
-shutil.copy('scripts/compute-node-setup.sh', 'shared/scripts/compute-node-setup.sh')
-shutil.copy('scripts/head-node-setup.sh', 'shared/scripts/head-node-setup.sh')
-shutil.copy('scripts/node-run-jobs.sh', 'shared/scripts/node-run-jobs.sh')
-shutil.copy('scripts/launch-job.py', 'shared/scripts/launch-job.py')
-shutil.copy('scripts/job-status.py', 'shared/scripts/job-status.py')
+shutil.copy('scripts/compute-node-setup.sh', f'{args.package}/scripts/compute-node-setup.sh')
+shutil.copy('scripts/head-node-setup.sh', f'{args.package}/scripts/head-node-setup.sh')
+shutil.copy('scripts/node-run-jobs.sh', f'{args.package}/scripts/node-run-jobs.sh')
+shutil.copy('scripts/launch-job.py', f'{args.package}/scripts/launch-job.py')
+shutil.copy('scripts/job-status.py', f'{args.package}/scripts/job-status.py')
+if compute_nodes == 1:
+    shutil.copy('scripts/run_container.sh', f'{args.package}/run_container.sh')
+    if args.arch == 'x86_64':
+        shutil.copy('scripts/install-x86_64-container.sh', f'{args.package}/install-x86_64-container.sh')
 
 # Add generic data files
-data_dir = Path("shared/data")
+data_dir = Path(f"{args.package}/data")
 
 # add all the data files required for mask
 md = pyreadr.read_r("../00_data/analyses_metadata.RData")
@@ -106,7 +114,7 @@ metadata = md['analyses_metadata']
 mask_dir = metadata[metadata['MASK']==mask]['DATA.PATH'].values[0]
 mask_dir, unused_fname = os.path.split(mask_dir)
 
-tgt_mask_dir = Path(f"shared/data/{mask_dir}")
+tgt_mask_dir = Path(f"{args.package}/data/{mask_dir}")
 tgt_mask_dir.mkdir(parents=True, exist_ok=True)
 for fname in ['dataforanalyses.RData-data_opt',
               'dataforanalyses.RData-metadata',
@@ -126,13 +134,13 @@ for i in range(assignment_min,assignment_max+1):
     shutil.copy(src_fname, tgt_fname)
 
 print("Copying common data files")
-data2_dir = Path(f"shared/data/00_data")
+data2_dir = Path(f"{args.package}/data/00_data")
 data2_dir.mkdir(parents=True, exist_ok=True)
-shutil.copy('../00_data/analyses_metadata.RData', 'shared/data/00_data/analyses_metadata.RData')
-shutil.copy('../00_data/current_soib_migyears.RData', 'shared/data/00_data/current_soib_migyears.RData')
+shutil.copy('../00_data/analyses_metadata.RData', f'{args.package}/data/00_data/analyses_metadata.RData')
+shutil.copy('../00_data/current_soib_migyears.RData', f'{args.package}/data/00_data/current_soib_migyears.RData')
 
 print("Generating done list")
-output_dir = Path(f"shared/output/{mask}")
+output_dir = Path(f"{args.package}/output/{mask}")
 output_dir.mkdir(parents=True, exist_ok=True)
 done_file = open(os.path.join(output_dir, "done.list"),"w")
 for trends_fname in trends_list:
@@ -140,11 +148,11 @@ for trends_fname in trends_list:
 
 print("Creating log directories...")
 for node in node_names:
-    log_dir = Path(f"shared/logs/{node}")
+    log_dir = Path(f"{args.package}/logs/{node}")
     log_dir.mkdir(parents=True, exist_ok=True)
 
 print(f"Copying container for {arch}")
-container_dir = Path(f"shared/container/{arch}")
+container_dir = Path(f"{args.package}/container/{arch}")
 container_dir.mkdir(parents=True, exist_ok=True)
 src_container = f'../{arch}/soib.tar'
 tgt_container = os.path.join(container_dir,'soib.tar')
