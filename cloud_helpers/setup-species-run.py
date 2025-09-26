@@ -101,8 +101,8 @@ shutil.copy('scripts/launch-job.py', f'{args.package}/scripts/launch-job.py')
 shutil.copy('scripts/job-status.py', f'{args.package}/scripts/job-status.py')
 if compute_nodes == 1:
     shutil.copy('scripts/run_container.sh', f'{args.package}/run_container.sh')
-    if args.arch == 'x86_64':
-        shutil.copy('scripts/install-x86_64-container.sh', f'{args.package}/install-x86_64-container.sh')
+    shutil.copy('scripts/install-x86_64-container.sh', f'{args.package}/install-x86_64-container.sh')
+    shutil.copy('scripts/install-aarch64-container.sh', f'{args.package}/install-aarch64-container.sh')
 
 # Add generic data files
 data_dir = Path(f"{args.package}/data")
@@ -151,13 +151,15 @@ for node in node_names:
     log_dir = Path(f"{args.package}/logs/{node}")
     log_dir.mkdir(parents=True, exist_ok=True)
 
-print(f"Copying container for {arch}")
-container_dir = Path(f"{args.package}/container/{arch}")
-container_dir.mkdir(parents=True, exist_ok=True)
-src_container = f'../{arch}/soib.tar'
-tgt_container = os.path.join(container_dir,'soib.tar')
-shutil.copy(src_container, tgt_container)
-os.chdir(container_dir)
-
-print(f"Compressing container...")
-subprocess.run(["xz","-T0","soib.tar"])
+for this_arch in ['x86_64', 'aarch64']:
+    print(f"Copying container for {this_arch}")
+    container_dir = Path(f"{args.package}/container/{this_arch}")
+    container_dir.mkdir(parents=True, exist_ok=True)
+    src_container = f'../{this_arch}/soib.tar'
+    tgt_container = os.path.join(container_dir,'soib.tar')
+    shutil.copy(src_container, tgt_container)
+    prev_cwd = os.getcwd()
+    os.chdir(container_dir)
+    print(f"Compressing container...")
+    subprocess.run(["xz","-T0","soib.tar"])
+    os.chdir(prev_cwd)
