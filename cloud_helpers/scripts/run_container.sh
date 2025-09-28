@@ -5,4 +5,4 @@
 # Paths are set to file paths in source tree
 #
 MYDIR=`pwd`
-podman run -v $MYDIR/config:/app/config -v $MYDIR/output:/app/output -v $MYDIR/data:/app/data --hostname localhost -it soib "$@"
+podman run -v "$MYDIR"/config:/app/config -v "$MYDIR"/output:/app/output -v "$MYDIR"/data:/app/data --hostname localhost -it soib "$@"
