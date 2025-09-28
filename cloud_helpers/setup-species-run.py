@@ -22,6 +22,7 @@ parser.add_argument('-a','--assignment', type=str, default="1:1000")
 parser.add_argument('-p','--package', type=str, default="shared")
 parser.add_argument('-c','--config_R', type=str, default="config.R") # name of config file
 parser.add_argument('--arch', type=str, default="x86_64")
+parser.add_argument('--slim', action='store_true')
 args = parser.parse_args()
 
 # add quoted species
@@ -101,8 +102,9 @@ shutil.copy('scripts/launch-job.py', f'{args.package}/scripts/launch-job.py')
 shutil.copy('scripts/job-status.py', f'{args.package}/scripts/job-status.py')
 if compute_nodes == 1:
     shutil.copy('scripts/run_container.sh', f'{args.package}/run_container.sh')
-    shutil.copy('scripts/install-x86_64-container.sh', f'{args.package}/install-x86_64-container.sh')
-    shutil.copy('scripts/install-aarch64-container.sh', f'{args.package}/install-aarch64-container.sh')
+    if not args.slim:
+        shutil.copy('scripts/install-x86_64-container.sh', f'{args.package}/install-x86_64-container.sh')
+        shutil.copy('scripts/install-aarch64-container.sh', f'{args.package}/install-aarch64-container.sh')
 
 # Add generic data files
 data_dir = Path(f"{args.package}/data")
@@ -151,15 +153,16 @@ for node in node_names:
     log_dir = Path(f"{args.package}/logs/{node}")
     log_dir.mkdir(parents=True, exist_ok=True)
 
-for this_arch in ['x86_64', 'aarch64']:
-    print(f"Copying container for {this_arch}")
-    container_dir = Path(f"{args.package}/container/{this_arch}")
-    container_dir.mkdir(parents=True, exist_ok=True)
-    src_container = f'../{this_arch}/soib.tar'
-    tgt_container = os.path.join(container_dir,'soib.tar')
-    shutil.copy(src_container, tgt_container)
-    prev_cwd = os.getcwd()
-    os.chdir(container_dir)
-    print(f"Compressing container...")
-    subprocess.run(["xz","-T0","soib.tar"])
-    os.chdir(prev_cwd)
+if not args.slim:
+    for this_arch in ['x86_64', 'aarch64']:
+        print(f"Copying container for {this_arch}")
+        container_dir = Path(f"{args.package}/container/{this_arch}")
+        container_dir.mkdir(parents=True, exist_ok=True)
+        src_container = f'../{this_arch}/soib.tar'
+        tgt_container = os.path.join(container_dir,'soib.tar')
+        shutil.copy(src_container, tgt_container)
+        prev_cwd = os.getcwd()
+        os.chdir(container_dir)
+        print(f"Compressing container...")
+        subprocess.run(["xz","-T0","soib.tar"])
+        os.chdir(prev_cwd)
