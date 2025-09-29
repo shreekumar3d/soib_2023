@@ -10,6 +10,7 @@ import sys
 import glob
 import re
 import shutil
+from pathlib import Path
 
 parser = ArgumentParser()
 parser.add_argument('done_list',
@@ -55,7 +56,8 @@ for this_mask in masks:
             continue
         f_dir, f_name = os.path.split(filename)
         src_file = filename
-        dst_file = os.path.join(tgt_base_dir, f_name)
+        dst_dir = os.path.join(tgt_base_dir, 'trends')
+        dst_file = os.path.join(dst_dir, f_name)
         if not os.path.isfile(src_file):
             if args.verbose:
                 print(f"Missing: {src_file}")
@@ -67,6 +69,9 @@ if files_missing==0:
     print(f"Copying {len(copy_list)} files...")
     for src_file, dst_file in copy_list:
         if not args.dry_run:
+            dst_dir, dst_fname = os.path.split(dst_file)
+            dst_dir = Path(dst_dir)
+            dst_dir.mkdir(parents=True, exist_ok=True)
             shutil.copy(src_file, dst_file)
             if args.verbose:
                 print(f'{src_file} -> {dst_file}')
