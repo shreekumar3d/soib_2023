@@ -64,6 +64,7 @@ for i in range(compute_nodes):
     cfg_path = Path(f'{args.package}/config/{node}')
     cfg_file = os.path.join(cfg_path, args.config_R)
     cfg_text = f"""threads <- {threads}
+container <- TRUE
 cur_mask <- "{mask}"
 my_assignment <- {assignment_start}:{assignment_end}
 species_to_process <- c(

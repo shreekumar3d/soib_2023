@@ -6,9 +6,14 @@ library(parallel)
 hostname <- paste0(Sys.info()["nodename"],"")
 
 # preparing data for specific mask (this is the only part that changes, but automatically)
-cur_metadata <- get_metadata(cur_mask)
-speclist_path <- paste0("data/", cur_metadata$SPECLISTDATA.PATH)
-databins_path <- paste0("data/", cur_metadata$DATA.PATH) # for databins
+cur_metadata <- get_metadata(cur_mask, container)
+if(container) {
+  data_prefix = "data/"
+} else {
+  data_prefix = ""
+}
+speclist_path <- paste0(data_prefix, cur_metadata$SPECLISTDATA.PATH)
+databins_path <- paste0(data_prefix, cur_metadata$DATA.PATH) # for databins
 
 get_free_ram <- function() {
 #               total        used        free      shared  buff/cache   available
@@ -107,7 +112,13 @@ if (to_run == TRUE) {
     message("========================================")
     message(paste("Starting assignment:", k))
     message("========================================")
-    trends_species_dir <- paste0("output/", cur_mask, "/", hostname,"/", k, "/species")
+    if(container) {
+      trends_species_dir <- paste0("output/", cur_mask, "/", hostname,"/", k, "/species")
+    } else {
+      trends_species_dir <- cur_metadata %>%
+        dplyr::summarise(TRENDS.PATH = glue("{TRENDS.PATHONLY}/species_{k}")) %>%
+        as.character()
+    }
     trends_stats_dir <- paste0(trends_species_dir,"/stats")
     # creating new directory if it doesn't already exist
     if (!dir.exists(trends_stats_dir)) {
@@ -116,9 +127,15 @@ if (to_run == TRUE) {
     }
     
     # file names for individual files
-    write_path <- cur_metadata %>% 
-      dplyr::summarise(TRENDS.PATH = glue("output/{cur_mask}/{hostname}/{k}/trends_{k}.csv")) %>%
-      as.character()
+    if(container) {
+      write_path <- cur_metadata %>%
+        dplyr::summarise(TRENDS.PATH = glue("output/{cur_mask}/{hostname}/{k}/trends_{k}.csv")) %>%
+        as.character()
+    } else {
+      write_path <- cur_metadata %>%
+        dplyr::summarise(TRENDS.PATH = glue("{TRENDS.PATHONLY}trends_{k}.csv")) %>%
+        as.character()
+    }
 
     if(file.exists(write_path)) {
       if(!force_trends_computation) {
@@ -129,7 +146,7 @@ if (to_run == TRUE) {
       }
     }
     data_path = cur_metadata %>% 
-      dplyr::summarise(SIMDATA.PATH = glue("data/{SIMDATA.PATHONLY}data{k}.RData_opt")) %>%
+      dplyr::summarise(SIMDATA.PATH = glue("{data_prefix}{SIMDATA.PATHONLY}data{k}.RData_opt")) %>%
       as.character()
     
     tictoc::tic(glue("Species trends for {cur_mask}: {k}/{max(cur_assignment)}"))
@@ -278,6 +295,7 @@ if (to_run == TRUE) {
 
 	  proc <- mcparallel(
 		    singlespeciesrun(
+		       container = container,
 		       reproducible = reproducible_run,
 		       stats_dir = trends_stats_dir,
 		       species_dir = trends_species_dir,
@@ -391,7 +409,7 @@ if (to_run == TRUE) {
                 timegroups = rep(databins$year, 2),
                 type = rep(c("freq", "se"), 
                             # will always have 2*N.YEAR rows (freq, se)
-                            each = length(soib_year_info("timegroup_lab"))),
+                            each = length(soib_year_info("timegroup_lab", container))),
                 sl = k) %>%  # sim number
         # pivoting species names longer
         pivot_longer(-c(timegroups, timegroupsf, sl, type), 
@@ -421,8 +439,8 @@ if (to_run == TRUE) {
         # reordering
         relocate(sl, COMMON.NAME, freq, se) |> 
         # bringing back timegroups columns
-        mutate(timegroups = soib_year_info("latest_year"),
-               timegroupsf = as.character(soib_year_info("latest_year")))
+        mutate(timegroups = soib_year_info("latest_year", container),
+               timegroupsf = as.character(soib_year_info("latest_year", container)))
 
       }} %>% 
       # make sure freq and se are numerical
@@ -452,7 +470,7 @@ if (to_run == TRUE) {
     } else if (singleyear == TRUE) {
 
       trends_old <- read.csv(write_path, header = TRUE) |> 
-        filter(timegroups != soib_year_info("latest_year"))
+        filter(timegroups != soib_year_info("latest_year", container))
 
       trends_new <- trends_old |> 
         bind_rows(trends) |> 

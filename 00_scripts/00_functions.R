@@ -13,9 +13,13 @@ library(tictoc)
 
 # get analyses metadata -------------------------------------------------
 
-get_metadata <- function(mask = NULL) {
+get_metadata <- function(mask = NULL, container=FALSE) {
 
-  load("data/00_data/analyses_metadata.RData")
+  if(container) {
+    load("data/00_data/analyses_metadata.RData")
+  } else {
+    load("00_data/analyses_metadata.RData")
+  }
 
   if(is.null(mask)) {
     return(analyses_metadata)
@@ -99,7 +103,7 @@ createrandomlocs_grouped = function(grouped_locs)
 
 # what are the latest migratory years under consideration? -----------------
 
-soib_year_info <- function(what = "latest_year") {
+soib_year_info <- function(what = "latest_year", container=FALSE) {
 
   # catch input errors
   valid_inputs <- c("latest_year", "timegroup_lab", "timegroup_med", 
@@ -113,8 +117,11 @@ soib_year_info <- function(what = "latest_year") {
 
 
   # load latest year data
-  load("data/00_data/current_soib_migyears.RData")
-
+  if(container) {
+    load("data/00_data/current_soib_migyears.RData")
+  } else {
+    load("00_data/current_soib_migyears.RData")
+  }
 
   # latest year
   if (what == "latest_year") {
@@ -1299,7 +1306,7 @@ filt_data_for_mig <- function(data, species_var, status_var) {
 ### run models ########################################
 
 # trends
-singlespeciesrun_internal = function(reproducible, data, species_index, species, specieslist, restrictedspecieslist,
+singlespeciesrun_internal = function(container, reproducible, data, species_index, species, specieslist, restrictedspecieslist,
                             singleyear = FALSE)
 {
 
@@ -1337,12 +1344,12 @@ singlespeciesrun_internal = function(reproducible, data, species_index, species,
   if (singleyear == FALSE) {
 
     if (is.na(specieslist2$ht) & !is.na(specieslist2$rt)) {
-      data1 = data1 %>% filter(year >= soib_year_info("cat_start"))
+      data1 = data1 %>% filter(year >= soib_year_info("cat_start", container))
     }
   
   } else if (singleyear == TRUE) {
 
-    data1 = data1 %>% filter(year == soib_year_info("latest_year"))
+    data1 = data1 %>% filter(year == soib_year_info("latest_year", container))
   }
 
   
@@ -1463,7 +1470,7 @@ singlespeciesrun_internal = function(reproducible, data, species_index, species,
       rename(timegroupsf = timegroups,
              timegroups = year) %>% 
       mutate(timegroupsf = factor(timegroupsf, 
-                                  levels = soib_year_info("timegroup_lab"))) %>% 
+                                  levels = soib_year_info("timegroup_lab", container))) %>%
       complete(timegroupsf) %>% 
       arrange(timegroupsf) %>%
       suppressMessages()
@@ -1479,10 +1486,10 @@ singlespeciesrun_internal = function(reproducible, data, species_index, species,
   
 }
 
-singlespeciesrun = function(reproducible, stats_dir, species_dir, data, species_index, species,
+singlespeciesrun = function(container, reproducible, stats_dir, species_dir, data, species_index, species,
 			    specieslist, restrictedspecieslist, singleyear = FALSE)
 {
-  ram <- peakRAM(retval <- singlespeciesrun_internal(reproducible, data, species_index, species,
+  ram <- peakRAM(retval <- singlespeciesrun_internal(container, reproducible, data, species_index, species,
 						     specieslist, restrictedspecieslist, singleyear))
   run_stats <- data.frame(data_rows = retval[1],
                           time = ram$Elapsed_Time_sec,

@@ -1,5 +1,6 @@
 #
 # Script to run Part 3 Step 1
+#
 # i.e. computing species trends
 # for whole country
 # and first random set (my_assignment = 1:1)
@@ -25,16 +26,6 @@ suppressPackageStartupMessages({
    library(tictoc)
 })
 
-# We pass results back to host using the "output" directory.
-# The container doesn't have it. It has to be bound by the user
-# while starting the container. We check this exists
-# Ideally we'd have to check whether it's writable, and doesn't
-# have any funky permissions that break our scripts
-if (!dir.exists("output")) {
-  message(paste("Output directory does not exist. Please ensure it is mounted"))
-  quit()
-}
-
 hostname <- paste0(Sys.info()["nodename"],"")
 
 config_filename <- 'config.R'
@@ -44,10 +35,29 @@ if(length(args)>=1) {
   message("Using config file: ", config_filename)
 }
 
+# If localhost config file exists, pick that first
+config_path = paste0("config/localhost/", config_filename)
+if (!file.exists(config_path)) {
+  config_path = paste0("config/",hostname,"/", config_filename)
+}
 
-# Source config file that can define 'threads' and
-# 'species_to_process'. Anything else there is ignored
-source(paste0("config/",hostname,"/", config_filename))
+# Source config file to get runtime parameters
+# Unsupported values are ignored.
+source(config_path)
+
+if(!exists('container')) {
+  container <- FALSE;
+}
+
+# We pass results back to host using the "output" directory.
+# The container doesn't have it. It has to be bound by the user
+# while starting the container. We check this exists
+# Ideally we'd have to check whether it's writable, and doesn't
+# have any funky permissions that break our scripts
+if (container && (!dir.exists("output"))) {
+  message(paste("Output directory does not exist. Please ensure it is mounted"))
+  quit()
+}
 
 library(parallel)
 
@@ -96,7 +106,11 @@ library(tictoc)
 
 source("00_scripts/00_functions.R")
 
-load("data/00_data/analyses_metadata.RData")
+if(container) {
+  load("data/00_data/analyses_metadata.RData")
+} else {
+  load("00_data/analyses_metadata.RData")
+}
 
 # full country runs -------------------------------------------------------
 
@@ -110,7 +124,8 @@ if(!exists('my_assignment')) {
 # Requires:
 # - tidyverse, tictoc, lme4, VGAM, parallel, foreach, doParallel
 # - data files:
-#   - "dataforsim/dataX.RData"
+#   - "dataforanalyses.RData-data_opt"
+#   - "dataforanalyses.RData-metadata"
 #   - "specieslists.RData"
 # Outputs:
 # - "trends/trendsX.csv" files

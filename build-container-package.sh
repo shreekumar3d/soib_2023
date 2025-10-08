@@ -8,7 +8,7 @@ mkdir -p soib-container/data/00_data
 mkdir -p soib-container/data/01_analyses_full/dataforsim
 
 cp README-CONTAINER.md soib-container/
-cp config/localhost/config.R soib-container/config/localhost
+cp config/localhost/config-container.R soib-container/config/localhost/config.R
 cp run_container_package.sh soib-container/run_container.sh
 cp 00_data/analyses_metadata.RData soib-container/data/00_data
 cp 01_analyses_full/specieslists.RData soib-container/data/01_analyses_full

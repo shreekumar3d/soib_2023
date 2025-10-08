@@ -4,7 +4,7 @@
 #  - output paths same as earlier
 # Running inside container will assign top
 # level paths such as "data" and "output"
-container <- FALSE
+container <- TRUE
 
 # Setup a specific number of max threads to run
 # by defining them here.
