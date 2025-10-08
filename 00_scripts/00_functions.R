@@ -2041,7 +2041,7 @@ update_species_lists = function(species_list_data, scientific_also = FALSE) {
 
   # when rerunning for same year, need to return unmodified list
   # because species names already updated in prior run
-  if (length(setdiff(species_list_data$COMMON.NAME,ebird_tax_mapping()$eBird.English.Name.2024)) == 0) {
+  if (length(setdiff(unique(species_list_data$COMMON.NAME),unique(ebird_tax_mapping()$eBird.English.Name.2024))) == 0) {
 
     message("Species list is already updated to latest taxonomy. Returning original list.")
     
@@ -2050,10 +2050,12 @@ update_species_lists = function(species_list_data, scientific_also = FALSE) {
       species_list_data <- species_list_data |>
         dplyr::select(COMMON.NAME,SCIENTIFIC.NAME,Long.Term.Analysis,Current.Analysis,Selected.SoIB,
                       totalrange25km,proprange25km2000,proprange25km.current,proprange25km.latestyear,
-                      mean5km,ci5km)
+                      mean5km,ci5km) %>%
+        distinct(COMMON.NAME, .keep_all = TRUE)
     } else {
       species_list_data <- species_list_data |>
-        dplyr::select(COMMON.NAME,ht,rt,any_of("mixed"))
+        dplyr::select(COMMON.NAME,ht,rt,any_of("mixed")) %>%
+        distinct(COMMON.NAME, .keep_all = TRUE)
     }
 
     return(species_list_data)
@@ -2091,7 +2093,8 @@ update_species_lists = function(species_list_data, scientific_also = FALSE) {
         relocate(COMMON.NAME, SCIENTIFIC.NAME) %>%
         dplyr::select(COMMON.NAME,SCIENTIFIC.NAME,Long.Term.Analysis,Current.Analysis,Selected.SoIB,
                       totalrange25km,proprange25km2000,proprange25km.current,proprange25km.latestyear,
-                      mean5km,ci5km)
+                      mean5km,ci5km) %>%
+        distinct(COMMON.NAME, .keep_all = TRUE)
 
     } else {
       
@@ -2109,7 +2112,8 @@ update_species_lists = function(species_list_data, scientific_also = FALSE) {
         dplyr::select(-COMMON.NAME) |> 
         relocate(eBird.English.Name.2024) |> # first column is species name
         rename(COMMON.NAME = eBird.English.Name.2024) |>
-        dplyr::select(COMMON.NAME,ht,rt)
+        dplyr::select(COMMON.NAME,ht,rt) %>%
+        distinct(COMMON.NAME, .keep_all = TRUE)
       
     }
       
